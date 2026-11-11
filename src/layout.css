@@ -95,7 +95,9 @@ body { overflow: hidden; }
 .coming-soon p:not(.eyebrow) { font-size: 12px; max-width: 470px; line-height: 1.9; }
 @media(max-width:1060px) and (min-width:711px) {
   .app-shell { grid-template-columns: 70px minmax(0, 1fr); }
-  .sidebar .nav-link { justify-content: center; padding: 10px 2px; }
+  .sidebar .nav-link { justify-content: center; padding: 10px 2px; font-size: 0; }
+  .sidebar .nav-link>span:first-child { font-size: 20px; }
+  .sidebar .nav-link .nav-end { display: none; }
   .workspace { padding: 0 15px; }
   .view-heading h1 span, .tabs-context { display: none; }
 }
