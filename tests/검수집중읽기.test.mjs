@@ -34,7 +34,7 @@ test('오류와 참고 자료 보강을 구분하고 자료가 없으면 중복�
   ]);
   assert.match(focus,/filter\(\(step\) => step\.priority < 3\)/);
   assert.match(focus,/검사에 필요한 자료가 부족합니다/);
-  assert.match(focus,/카드 원문만 등록되어 있습니다/);
+  assert.match(focus,/이 카드와 연결된 CDB·Lua가 없습니다/);
   assert.match(ui,/audit-no-code-note/);
   assert.match(ui,/CDB\/Lua 심층 검수는 자료 추가 대기 중/);
   const plan=buildFixPlan({cards:[card]});
