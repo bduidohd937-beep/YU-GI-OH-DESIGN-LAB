@@ -1,0 +1,36 @@
+/* V0.7.4 — 실전 실패 조사 근거·수정 검토안·재시험 계획 */
+.runtime-review-shortcut{cursor:pointer;border:1px solid #8c6a7b;border-radius:7px;background:#382937;color:#f2d2db;padding:7px 13px;font-weight:800;font-size:11px}
+.runtime-review-shortcut:hover:not(:disabled){background:#573547}
+.runtime-review-shortcut:disabled{opacity:.45;cursor:not-allowed}
+.triage-panel{margin:21px 0 28px;padding:22px clamp(15px,2.5vw,28px);background:#20202d;border:1px solid #816178;border-left:4px solid #bb899a;border-radius:12px;display:grid;gap:18px}
+.triage-eyebrow{font-size:11px;font-weight:800;letter-spacing:.5px;color:#e3b1c3}
+.triage-panel h4{margin:0;color:#ffe6ef;font-size:22px;line-height:1.5}
+.triage-panel h5{margin:0 0 12px;color:#e8cff3;font-size:15px;line-height:1.55}
+.triage-hint{font-size:13px;color:#b9bdd3;line-height:1.85;margin:0}
+.triage-facts{background:#161b2b;border:1px solid #454058;border-radius:9px;padding:12px 17px}
+.triage-fact{margin:10px 0;font-size:13px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;color:#e2e3ef}
+.triage-fact strong{color:#d7bbea}
+.triage-section{border-top:1px solid #454052;padding-top:20px}
+.triage-hit{background:#131a29;border:1px solid #41465a;border-radius:9px;padding:15px 17px;margin:10px 0}
+.triage-hit>strong{color:#e5cfef;font-size:14px;overflow-wrap:anywhere;line-height:1.6}
+.triage-note{font-size:12px;color:#bbc0d4;line-height:1.9;white-space:pre-wrap;margin:10px 0}
+.triage-context-label{font-size:11px;color:#b3a1e1;margin:13px 0 7px}
+.triage-code{border:1px solid #3c4156;border-radius:7px;background:#0a0f1b;color:#e2e5f2;font:12px/1.85 ui-monospace,Consolas,monospace;padding:13px 15px;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:310px;overflow-y:auto}
+.triage-static{background:#181c2c;border:1px solid #434458;border-radius:8px;padding:13px 15px;margin:10px 0}
+.triage-static strong{font-size:12px;color:#cfb8ea}
+.triage-static p{font-size:12px;line-height:1.85;color:#c4cada;margin:9px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.triage-static small{font-size:11px;color:#a5a9c4}
+.triage-checklist{padding-left:24px;margin:0;color:#d4d7e7;font-size:13px;line-height:2}
+.triage-checklist li{margin:6px 0}
+.triage-form{padding:18px 20px;background:#171b29;border:1px solid #50475c;border-radius:9px;display:grid;gap:15px}
+.triage-form textarea{min-height:92px;resize:vertical}
+.runtime-state.runtime-retest{color:#e6cf9d;background:#3d3529}
+@media(max-width:780px){
+ .triage-panel{padding:15px 12px;margin:16px 0}
+ .triage-panel h4{font-size:18px}
+ .triage-panel h5{font-size:13px}
+ .triage-facts,.triage-form{padding:12px}
+ .triage-hit{padding:12px}
+ .triage-code{font-size:11px}
+ .runtime-review-shortcut{font-size:10px;padding:5px 10px}
+}
