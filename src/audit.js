@@ -1,4 +1,5 @@
 import { parseDocuments } from './parser.js';
+import { scanLuaFile } from './lua-inspector.js';
 
 export function normalizeCardName(value = '') {
   return String(value).normalize('NFKC')
@@ -88,44 +89,6 @@ function verifyText(original, cdbText) {
   return null;
 }
 
-function hasRelevantSharedScript(name) {
-  return /(?:_common|_shared|common_|shared_)\.lua$/i.test(name);
-}
-
-function checkLua(script, card) {
-  const warnings = [];
-  if (!/function\s+\w+\.initial_effect\s*\(/.test(script.text)) {
-    warnings.push(issue('warning', 'NO_INITIAL_EFFECT', '초기 효과 등록 함수 확인 필요',
-      'Lua에 initial_effect 함수 정의가 보이지 않습니다.'));
-  }
-  if (/\baux\.AddLinkProcedure\s*\(/.test(script.text)) {
-    warnings.push(issue('warning', 'LEGACY_LINK_HELPER', '구형 링크 소환 헬퍼 사용 가능성',
-      'aux.AddLinkProcedure 호출을 발견했습니다. 대상 EDOPro 버전의 Link.AddProcedure와 대조하세요.'));
-  }
-  if (/Xyz\.AddProcedure\s*\([^)]*,\s*99\s*\)/.test(script.text)) {
-    warnings.push(issue('warning', 'XYZ_99_SENTINEL', '엑시즈 소재 99 매개변수 확인 필요',
-      '구형 무한 소재 지정 방식이 남아 있을 수 있습니다.'));
-  }
-  if (/GetOriginalAttack\s*\(/.test(script.text)) {
-    warnings.push(issue('warning', 'ATTACK_API_COMPAT', '원래 공격력 API 호환성 확인 필요',
-      'GetOriginalAttack 호출을 발견했습니다. 실제 EDOPro 런타임 호환 여부를 점검하세요.'));
-  }
-  const descIndices = [...script.text.matchAll(/aux\.Stringid\s*\(\s*id\s*,\s*(\d+)\s*\)/g)]
-    .map((m) => Number(m[1]));
-  if (card) {
-    const missing = [...new Set(descIndices)].filter((i) => i >= 0 && i < 16 && !String(card.strings?.[i] || '').trim());
-    if (missing.length) warnings.push(issue('warning', 'DESCRIPTION_MISSING', '효과 선택지 설명 문자열 누락',
-      'Lua에서 aux.Stringid(id, ' + missing.join('), aux.Stringid(id, ') + ')을 호출하지만 해당 CDB str 필드가 비어 있습니다. ??? 선택지의 원인일 수 있습니다.'));
-  }
-  if (/특수 소환(?:했을|되었을|에 성공했을)\s*경우/.test(card?.desc || '')
-      && !/EVENT_SPSUMMON_SUCCESS/.test(script.text)
-      && /EVENT_SUMMON_SUCCESS/.test(script.text)) {
-    warnings.push(issue('info', 'SPSUMMON_REVIEW', '특수 소환 성공 트리거 확인 필요',
-      '설명에는 특수 소환 시 효과가 있으나 Lua에서 EVENT_SPSUMMON_SUCCESS를 직접 찾지 못했습니다. 공용 헬퍼 사용 여부를 검토하세요.'));
-  }
-  return warnings;
-}
-
 export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadingWarnings = [] } = {}) {
   const parsed = parseDocuments(textFiles);
   const warnings = [...loadingWarnings, ...parsed.warnings];
@@ -133,13 +96,15 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   // CDB만 올린 경우에도 Lua 누락·설명 문자열·공용 스크립트를 검사할 수 있습니다.
   // 단, 원문 대조를 통과한 것으로 판정하지 않습니다.
   const records = sourceCards.length ? sourceCards :
-    [...new Map(cdbCards.map((c) => [String(c.id), c])).values()].map((c) => ({
+    cdbCards.length ? [...new Map(cdbCards.map((c) => [String(c.id), c])).values()].map((c) => ({
       key: 'cdb:' + c.id, name: c.name, theme: '원문 미제공', id: String(c.id),
       fileName: '원문 미제공', description: ''
-    }));
+    })) : [...new Map(luaFiles.filter((f) => /^c\d{6,10}\.lua$/i.test(f.name.split('/').pop()))
+      .map((f) => [f.name.split('/').pop().match(/^c(\d+)\.lua$/i)[1], f])).entries()]
+      .map(([id]) => ({ key: 'lua:' + id, name: 'Lua 카드 ' + id,
+        theme: '원문·CDB 미제공', id, fileName: '원문 미제공', description: '' }));
   const cdbById = groupBy(cdbCards, (c) => String(c.id));
   const cdbByName = groupBy(cdbCards, (c) => normalizeCardName(c.name));
-  const luaByName = groupBy(luaFiles, (f) => f.name.split('/').pop().toLowerCase());
   const luaById = groupBy(luaFiles.filter((f) => /^c\d{6,10}\.lua$/i.test(f.name.split('/').pop())),
     (f) => f.name.split('/').pop().match(/^c(\d+)\.lua$/i)[1]);
   const hasCdb = cdbCards.length > 0;
@@ -204,14 +169,9 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
         problems.push(issue('warning', 'LUA_VERSION_CONFLICT', '동일 카드의 서로 다른 Lua 버전이 존재',
           '같은 카드의 Lua가 여러 버전입니다. 마지막 파일이 임시 기준으로 선택됐습니다.'));
       }
-      problems.push(...checkLua(script, selected));
-      for (const m of script.text.matchAll(/Duel\.LoadScript\s*\(\s*["']([^"']+)["']\s*\)/g)) {
-        const name = m[1].split('/').pop().toLowerCase();
-        if (hasRelevantSharedScript(name) && !luaByName.has(name)) {
-          problems.push(issue('warning', 'SHARED_SCRIPT_NOT_IMPORTED', '참조한 공용 Lua가 입력 파일에 없음',
-            name + '을(를) 호출하지만 함께 업로드되지 않았습니다. EDOPro 설치 폴더에 이미 존재할 수 있습니다.'));
-        }
-      }
+      problems.push(...scanLuaFile(script, {
+        card: selected, availableLuaNames: luaFiles.map((file) => file.name)
+      }));
     } else if (hasLua && selected && requiresLua(selected.type)) {
       problems.push(issue('error', 'NO_CARD_SCRIPT', '카드 Lua 파일 없음',
         '필요한 파일: c' + effectiveId + '.lua'));
@@ -261,7 +221,7 @@ export function requiresLua(type) {
 
 export function auditMarkdown(result) {
   const out = [
-    '# YU-GI-OH DESIGN LAB — V0.2 원문·CDB·Lua 비교 보고서',
+    '# YU-GI-OH DESIGN LAB — V0.5 원문·CDB·Lua 심층 정적 보고서',
     '',
     '> 정적 점검 결과입니다. 실제 EDOPro 듀얼·OCG 재정·밸런스 검증 결과가 아닙니다.',
     '',
@@ -274,7 +234,13 @@ export function auditMarkdown(result) {
     out.push('## ' + card.theme + ' / ' + card.name + (card.id ? ' (' + card.id + ')' : ''), '');
     out.push('- 원문: ' + card.source, '- CDB: ' + (card.cdb || '미확인'), '- Lua: ' + (card.lua || '미확인'));
     if (!card.issues.length) out.push('- 정적 검사에서 문제 후보 없음 (실전 검증 아님)');
-    for (const i of card.issues) out.push('- [' + i.severity + '/' + i.code + '] ' + i.title + ': ' + i.detail);
+    for (const i of card.issues) {
+      const location = i.line ? ' (' + (i.file || card.lua || 'Lua') + ':' + i.line + ')' : '';
+      const confidence = i.confidence === 'static' ? ' / 정적 코드 패턴 확인' :
+        i.confidence === 'review' ? ' / 동작 검토 필요' : '';
+      out.push('- [' + i.severity + '/' + i.code + confidence + '] ' + i.title + location + ': ' + i.detail);
+      if (i.snippet) out.push('  - 증거: `' + i.snippet.replace(/`/g, '') + '`');
+    }
     out.push('');
   }
   out.push('---', result.note, '');
