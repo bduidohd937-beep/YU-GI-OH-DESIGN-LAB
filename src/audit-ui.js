@@ -6,6 +6,7 @@ import { createImplementationPanel } from './effect-implementation-ui.js';
 import { implementationMarkdown } from './effect-implementation.js';
 import { isOptionalInstallPath } from './package-versions.js';
 import { createImportNoticeViewer, categorizeImportNotices } from './import-notice-ui.js';
+import { createTestRecorder } from './test-recorder-ui.js';
 import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
@@ -20,6 +21,9 @@ let selectedKey = null;
 let filter = 'all';
 let themeFilter = '전체';
 const importNotices = createImportNoticeViewer();
+const testRecorder = createTestRecorder({
+  getResult:()=>result, getThemeFilter:()=>themeFilter, getSelectedKey:()=>selectedKey
+});
 
 function dom(tag, className, value) {
   const node = document.createElement(tag);
@@ -180,6 +184,7 @@ function renderSmartDashboard() {
   $('smart-test-export').disabled = !buildManualTestPlan(result,{theme:themeFilter}).cases.length;
   $('effect-export').disabled = !result?.cards?.some((card) =>
     (themeFilter === '전체' || card.theme === themeFilter) && card.effectImplementation?.scriptAvailable);
+  testRecorder.sync();
 }
 
 function render() {
