@@ -183,7 +183,13 @@ function render() {
   if (!card.issues.length) panel.append(dom('p', 'audit-noissue', '현재 정적 비교에서 문제 후보 없음. 실제 듀얼 정상 작동을 보증하지 않습니다.'));
   for (const item of card.issues) {
     const block = dom('div', 'audit-issue issue-' + item.severity);
-    block.append(dom('strong', '', '[' + item.code + '] ' + item.title), dom('p', '', item.detail));
+    const level = item.confidence === 'static' ? '정적 코드 패턴 확인' :
+      item.confidence === 'review' ? '엔진 동작 검토 필요' : '기초 비교';
+    block.append(dom('strong', '', '[' + item.code + '] ' + item.title));
+    const evidence = item.line ? ' · ' + (item.file || card.lua || 'Lua') + ':' + item.line : '';
+    block.append(dom('div', 'audit-evidence-meta', level + evidence));
+    block.append(dom('p', '', item.detail));
+    if (item.snippet) block.append(dom('code', 'audit-evidence-code', item.snippet));
     panel.append(block);
   }
   panel.append(dom('h4', 'audit-subhead', '원문과 CDB 효과 보기'));
@@ -240,7 +246,7 @@ $('audit-export').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const link = dom('a');
   link.href = url;
-  link.download = '종언성서_원문_CDB_Lua_정적검수_V0.2.md';
+  link.download = '종언성서_원문_CDB_Lua_심층검수_V0.5.md';
   document.body.append(link);
   link.click();
   link.remove();
