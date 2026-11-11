@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="커스텀 유희왕 테마의 원문을 브라우저에서 안전하게 열람하고 기초 검수하는 무료 연구소">
+  <title>YU-GI-OH DESIGN LAB · 원문 분석 연구소</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
+  <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="./" aria-label="YU-GI-OH DESIGN LAB 홈">
+        <span class="brand-icon" aria-hidden="true">✦</span>
+        <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
+      </a>
+      <div class="side-heading">WORKSPACE <span>V0.1</span></div>
+      <nav class="side-nav" aria-label="연구 기능">
+        <div class="nav-link active"><span>▦</span> 카드 원문 자료실 <span class="nav-end">01</span></div>
+        <div class="nav-link disabled" title="다음 버전 예정"><span>◇</span> 효과·규칙 검사 <span class="nav-end">예정</span></div>
+        <div class="nav-link disabled" title="다음 버전 예정"><span>♧</span> 덱 연구소 <span class="nav-end">예정</span></div>
+        <div class="nav-link disabled" title="다음 버전 예정"><span>◈</span> 자동 시험실 <span class="nav-end">예정</span></div>
+      </nav>
+      <div class="side-bottom">
+        <div class="privacy-card"><div class="privacy-head">● 로컬 분석 모드</div><p>올린 파일은 브라우저 안에서만 처리하며 서버로 전송하지 않습니다.</p></div>
+        <a class="repo-link" href="https://github.com/bduidohd937-beep/YU-GI-OH-DESIGN-LAB" target="_blank" rel="noopener noreferrer">GitHub 저장소 ↗</a>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs">PROJECT GENESIS <span>/</span> 종언성서 <span>/</span> 카드 연구소</div>
+        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.1</span></div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">YOUR CARD UNIVERSE, ORGANIZED.</p>
+          <h1>테마 설계의 혼란을<br><em>검증 가능한 기록</em>으로.</h1>
+          <p class="intro">카드 원문 모음집을 올리면 다섯 세력의 카드를 분류하고, 검색하고, 검수할 항목을 정리합니다. 지금은 규칙 기반 분석이며 실제 듀얼을 대신하지 않습니다.</p>
+          <div class="hero-actions">
+            <label for="file-input" class="primary-button">＋ 원문 ZIP / TXT 불러오기</label>
+            <button type="button" id="export-report" class="secondary-button" disabled>진단 보고서 저장 ↓</button>
+          </div>
+          <input id="file-input" type="file" accept=".zip,.txt" multiple hidden>
+        </div>
+        <div class="hero-emblem" aria-hidden="true"><div class="emblem-outer"><div class="emblem-inner">✧</div></div><span>ARCHIVE · ANALYZE · VERIFY</span></div>
+      </section>
+
+      <div class="stats" aria-label="불러온 원문 통계">
+        <div class="stat"><span>등록된 세력</span><strong id="stat-themes">0 <small>/ 5</small></strong></div>
+        <div class="stat"><span>읽은 카드 원문</span><strong id="stat-cards">0</strong></div>
+        <div class="stat"><span>분류된 키워드</span><strong id="stat-keywords">0</strong></div>
+        <div class="stat"><span>검증 단계</span><strong class="stat-stage">원문 정리</strong></div>
+      </div>
+
+      <section class="import-panel" id="dropzone" aria-label="파일 가져오기 영역" tabindex="0">
+        <div class="upload-mark">↥</div>
+        <div><strong>원문 ZIP을 이곳에 놓으세요</strong><p>다섯 테마의 TXT를 한 번에 불러오거나 여러 TXT를 선택할 수 있습니다. CDB·Lua·YDK의 직접 검수는 차기 버전에서 지원합니다.</p></div>
+        <label for="file-input" class="subtle-button">파일 선택</label>
+      </section>
+
+      <div id="message" class="message" role="status" aria-live="polite">아직 원문을 불러오지 않았습니다. 기존 《종언성서》 백업 ZIP을 선택해 주세요.</div>
+
+      <section class="content-panel">
+        <div class="section-head"><div><p class="eyebrow">CARD INDEX</p><h2>카드 원문 라이브러리</h2></div><div class="section-caption">실제 업로드한 원문만 표시합니다</div></div>
+        <div id="theme-tabs" class="theme-tabs" aria-label="테마 선택"></div>
+        <div class="toolbar">
+          <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="카드명, 효과, ID 검색..." aria-label="카드 검색" autocomplete="off"></label>
+          <select id="keyword-filter" aria-label="효과 키워드"><option value="">모든 키워드</option></select>
+          <span id="result-count" class="result-count">0종</span>
+        </div>
+        <div class="browse-grid">
+          <div id="card-list" class="card-list" aria-label="카드 목록"><div class="empty-list">원문을 불러오면 카드 목록이 여기에 나타납니다.</div></div>
+          <article id="card-detail" class="card-detail" aria-live="polite"><div class="empty-detail"><div class="detail-symbol">✧</div><h3>카드를 선택하세요</h3><p>원문 텍스트, 카드 ID, 자동 분류 및 추가 확인 사항을 표시합니다.</p></div></article>
+        </div>
+      </section>
+
+      <section class="notes-panel"><div><p class="eyebrow">DESIGN NOTES</p><h2>원문에 기록된 미결 사항</h2><p>분석 도구의 추측이 아니라 원문 파일의 ‘변경 및 검증 메모’를 그대로 보여줍니다.</p></div><div id="document-notes" class="document-notes">파일을 불러오면 원문 메모가 표시됩니다.</div></section>
+
+      <footer class="footer">YU-GI-OH DESIGN LAB · V0.1 · 오픈소스 기반 · 원문 분석 ≠ 엔진 검증 ≠ 실전 밸런스 평가</footer>
+    </main>
+  </div>
+</body>
+</html>
