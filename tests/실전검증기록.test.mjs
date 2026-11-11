@@ -115,3 +115,10 @@ test('같은 버전이라도 ① 효과 문구가 개정되면 재검증 필요'
   assert.equal(effectiveTestStatus(changed,previous),'retest');
   assert.equal(effectiveTestStatus(single,previous),'pass');
 });
+
+test('실패 결과는 실행 증상 또는 Lua 로그 없이 저장할 수 없다',()=>{
+  assert.throws(()=>makeTestEntry({
+    test:single,status:'fail',installedVersion:'V0.9.2',
+    notes:'  ',log:''
+  }),/실제 증상이나 Lua 로그/);
+});
