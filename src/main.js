@@ -73,6 +73,15 @@ async function readImports(fileList) {
 
 async function loadFiles(files) {
   files = Array.from(files || []);
+  if (!files.length) {
+    state.documents = [];
+    state.warnings = [];
+    state.selected = null;
+    renderNotes();
+    render();
+    setMessage('아직 등록된 카드 원문이 없습니다. 원문 ZIP 또는 TXT를 추가해 주세요.');
+    return;
+  }
   byId.input.disabled = true;
   setMessage('원문 파일을 분석하고 있습니다...');
   try {
