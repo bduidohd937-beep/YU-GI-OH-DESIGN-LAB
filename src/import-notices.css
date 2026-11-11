@@ -1,0 +1,76 @@
+/* V0.7.2 — 넓은 입력 자료 진단창. 검수 카드 표시 높이를 차지하지 않습니다. */
+#view-audit .audit-panel #audit-warnings.import-notices-bar {
+  max-height: none;
+  overflow: visible;
+  padding: 3px 11px 5px;
+  flex: 0 0 auto;
+}
+.import-notices-launch {
+  display:flex; align-items:center; gap:11px; width:100%;
+  min-height:34px; padding:6px 12px; border-radius:7px; cursor:pointer;
+  border:1px solid #63557b; background:#211d2b; color:#ded2f5;
+  text-align:left; font-size:12px;
+}
+.import-notices-launch:hover { background:#30283f; border-color:#a18ccf; }
+.import-notices-count { color:#efceaa; font-weight:800; }
+.import-notices-mini { color:#9ca3bb; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.import-notices-open-label { margin-left:auto; flex:0 0 auto; color:#d5baf8; white-space:nowrap; font-size:11px; }
+dialog.import-notices-dialog {
+  position:fixed; margin:auto; width:min(1100px,calc(100vw - 60px)); height:min(86vh,820px);
+  max-width:none; max-height:none; padding:0;
+  background:#101420; color:#ececf7; border:1px solid #5e5578; border-radius:15px;
+  box-shadow:0 24px 90px #000b; overflow:hidden;
+  grid-template-rows:auto minmax(0,1fr) auto;
+}
+dialog.import-notices-dialog[open] { display:grid; }
+dialog.import-notices-dialog::backdrop { background:rgba(3,5,14,.82); backdrop-filter:blur(4px); }
+.import-notices-header {
+  padding:23px 28px; border-bottom:1px solid #38374f; background:#191a2b;
+  display:flex; gap:20px; justify-content:space-between; align-items:center;
+}
+.import-notices-header h2 { font-size:26px; line-height:1.4; color:#f3edff; margin:7px 0; }
+.import-notices-header p { margin:0; font-size:13px; color:#aeb6ce; }
+.import-notices-eyebrow { font-size:11px; font-weight:800; color:#b7a0f4; letter-spacing:.8px; }
+.import-notices-header-actions { display:flex; align-items:center; gap:9px; }
+.import-notices-action,.import-notices-close {
+  cursor:pointer; border-radius:8px; border:1px solid #6b618b; padding:11px 16px;
+  font-size:12px; font-weight:800; color:#f0e9ff; background:#322944; white-space:nowrap;
+}
+.import-notices-action:hover,.import-notices-close:hover { background:#4b3b65; }
+.import-notices-close { border-color:#8d78c0; background:#46355e; }
+.import-notices-body { overflow:auto; min-height:0; padding:22px clamp(18px,5vw,56px) 44px; overscroll-behavior:contain; scrollbar-color:#575371 transparent; }
+.import-notices-section { margin:0 0 34px; }
+.import-notices-section h3 {
+  font-size:19px; line-height:1.5; color:#ddcafa;
+  padding-bottom:12px; margin:5px 0 17px; border-bottom:1px solid #383f54;
+}
+.import-notices-item {
+  padding:18px 21px; margin:0 0 13px; border:1px solid #424a5f; border-left:4px solid #c2a181;
+  border-radius:10px; background:#191f2e;
+}
+.import-notices-item.import-notices-info { border-left-color:#987ed2; }
+.import-notices-item h4 { font-size:17px; font-weight:800; color:#f0eafc; margin:0 0 13px; line-height:1.6; }
+.import-notices-item p { font-size:16px; line-height:2; color:#d5dceb; margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.import-notices-help { font-size:15px; color:#afb8d1; line-height:1.85; }
+.import-notices-file-list { margin:12px 0; padding:13px 18px 13px 38px; border:1px solid #3b4359; border-radius:9px; background:#181f2d; }
+.import-notices-file-list li { padding:5px 0; font-size:15px; line-height:1.75; color:#c9d1e6; overflow-wrap:anywhere; }
+.import-notices-empty { color:#abb4ca; line-height:2; font-size:16px; }
+.import-notices-footer {
+  border-top:1px solid #33384b; background:#181c2a; padding:12px 26px;
+  font-size:12px; line-height:1.6; color:#a3acc6;
+}
+@media (max-width: 700px) {
+  dialog.import-notices-dialog { width:calc(100vw - 14px); height:calc(100vh - 36px); border-radius:11px; }
+  .import-notices-header { padding:13px 15px; display:block; }
+  .import-notices-header h2 { font-size:20px; margin:4px 0 6px; }
+  .import-notices-header p { font-size:11px; }
+  .import-notices-header-actions { margin-top:11px; }
+  .import-notices-action,.import-notices-close { padding:8px 10px; font-size:11px; }
+  .import-notices-body { padding:14px 12px 25px; }
+  .import-notices-section h3 { font-size:16px; }
+  .import-notices-item { padding:13px 14px; }
+  .import-notices-item h4 { font-size:14px; }
+  .import-notices-item p,.import-notices-file-list li { font-size:13px; line-height:1.9; }
+  .import-notices-footer { font-size:10px; padding:8px 13px; }
+  .import-notices-mini { font-size:10px; }
+}
