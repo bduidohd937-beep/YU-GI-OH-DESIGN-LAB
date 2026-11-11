@@ -210,6 +210,13 @@ export async function refreshAudit(files) {
   notify('저장된 원문·CDB·Lua를 교차 검사하고 있습니다...');
   try {
     const relevant = [...(files || [])].filter((file) => /\.(zip|txt|cdb|lua)$/i.test(file.name));
+    if (!relevant.length) {
+      result = null;
+      selectedKey = null;
+      render();
+      notify('아직 등록된 검수 자료가 없습니다. 원문 또는 CDB·Lua 파일을 추가해 주세요.');
+      return;
+    }
     const data = await readImportFiles(relevant);
     result = buildAudit(data);
     if (!result.cards.some((card) => card.key === selectedKey)) selectedKey = result.cards[0]?.key || null;
