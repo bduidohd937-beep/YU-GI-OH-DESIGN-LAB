@@ -202,28 +202,28 @@ function render() {
   }
 }
 
-$('audit-input').addEventListener('change', async (event) => {
-  const files = [...event.target.files];
-  event.target.value = '';
-  if (!files.length) return;
+// 파일 선택은 공용 자료 관리자가 처리하며, 새로고침 시 저장된 자료를 재검사합니다.
+export async function refreshAudit(files) {
   $('audit-input').disabled = true;
-  notify('CDB·Lua·원문을 분석하는 중입니다...');
+  notify('저장된 원문·CDB·Lua를 교차 검사하고 있습니다...');
   try {
-    const data = await readImportFiles(files);
+    const relevant = [...(files || [])].filter((file) => /\.(zip|txt|cdb|lua)$/i.test(file.name));
+    const data = await readImportFiles(relevant);
     result = buildAudit(data);
-    selectedKey = result.cards[0]?.key || null;
-    filter = 'all';
-    $('audit-filter').value = 'all';
+    if (!result.cards.some((card) => card.key === selectedKey)) selectedKey = result.cards[0]?.key || null;
     render();
-    notify('정적 검사 완료. 원문 ' + result.counts.source + '종 · CDB ' + result.counts.cdb +
-      '종 · Lua ' + result.counts.lua + '개 / 오류 후보 ' + result.counts.error +
-      '건 · 검토 필요 ' + result.counts.warning + '건. 실제 듀얼 검증은 별도입니다.');
+    notify('정적 검사 완료 · 원문 ' + result.counts.source + '종 / CDB ' + result.counts.cdb +
+      '종 / Lua ' + result.counts.lua + '개 · 오류 후보 ' + result.counts.error +
+      '건, 경고 ' + result.counts.warning + '건' +
+      (result.warnings.length ? ' · 입력 자료 경고 ' + result.warnings.length + '건' : '') +
+      ' (실제 EDOPro 테스트 아님)');
   } catch (error) {
-    notify('검사 실패: ' + error.message, true);
+    notify('교차 검수 실패: ' + (error?.message || String(error)), true);
+    throw error;
   } finally {
     $('audit-input').disabled = false;
   }
-});
+}
 $('audit-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
 $('audit-export').addEventListener('click', () => {
   if (!result?.cards?.length) return;
