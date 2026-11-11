@@ -7,7 +7,7 @@ import { refreshAudit } from './audit-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const dialog = $('assets-dialog');
-const inputs = [$('assets-input'), $('file-input'), $('audit-input')];
+const inputs = [$('assets-input'), $('assets-modal-input'), $('file-input'), $('audit-input')];
 let busy = false;
 let lastNotice = '';
 
