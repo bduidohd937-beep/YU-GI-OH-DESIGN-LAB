@@ -70,18 +70,6 @@ export async function currentStorageMode() {
   return mode === 'persistent' ? 'persistent' : 'session';
 }
 
-function transact(db, modeName, callback) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE, modeName);
-    const store = transaction.objectStore(STORE);
-    let result;
-    try { result = callback(store); }
-    catch (e) { transaction.abort(); reject(e); return; }
-    transaction.oncomplete = () => resolve(result);
-    transaction.onerror = () => reject(transaction.error || new Error('IndexedDB 트랜잭션 실패'));
-    transaction.onabort = () => reject(transaction.error || new Error('저장 공간 부족 또는 브라우저 저장 차단'));
-  });
-}
 async function requestResult(db, method, value) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, method === 'getAll' ? 'readonly' : 'readwrite');
@@ -101,7 +89,7 @@ async function requestResult(db, method, value) {
 export async function listAssets() {
   const db = await openStore();
   const rows = db ? await requestResult(db, 'getAll') : [...sessionFiles.values()];
-  return rows.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+  return rows.sort((a, b) => (a.order || a.createdAt) - (b.order || b.createdAt) || a.id.localeCompare(b.id));
 }
 export async function assetFiles() {
   const rows = await listAssets();
@@ -121,6 +109,7 @@ export async function addAssets(files) {
   const current = await listAssets();
   const ids = new Set(current.map((row) => row.id));
   let bytes = current.reduce((sum, row) => sum + row.size, 0);
+  let nextOrder = current.reduce((max, row) => Math.max(max, row.order || row.createdAt || 0), 0) + 1;
   for (const file of files) {
     try {
       if (!/\.(zip|txt|cdb|lua|ydk)$/i.test(file.name)) throw new Error('지원하지 않는 확장자');
@@ -137,7 +126,7 @@ export async function addAssets(files) {
       if (bytes + file.size > MAX_TOTAL_BYTES) throw new Error('전체 보관 용량 96MB 제한 초과');
       const row = {
         id, name: file.name, sha256, size: file.size, type: file.type || '',
-        createdAt: Date.now(), lastModified: file.lastModified || 0, blob: new Blob([buffer])
+        createdAt: Date.now(), order: nextOrder++, lastModified: file.lastModified || 0, blob: new Blob([buffer])
       };
       if (db) await requestResult(db, 'put', row);
       else sessionFiles.set(id, row);
