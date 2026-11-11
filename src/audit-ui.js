@@ -75,12 +75,14 @@ async function readImportFiles(files) {
       try { archive = await globalThis.JSZip.loadAsync(file, { checkCRC32: true }); }
       catch (error) { warnings.push(file.name + ' : ZIP을 열 수 없음 — ' + error.message); continue; }
       const entries = Object.values(archive.files).filter((e) => !e.dir);
-      entriesSeen += entries.length;
+      // ZIP 내부 이미지·문서 등의 무관한 파일은 분석 항목 수에 포함하지 않습니다.
+      const analyzable = entries.filter((e) => kind(e.name));
+      entriesSeen += analyzable.length;
       if (entriesSeen > MAX_FILES) {
-        warnings.push('파일 항목이 120개를 초과했습니다. 해당 ZIP 분석을 건너뜁니다.');
+        warnings.push('검사 대상 TXT/CDB/Lua가 총 120개를 초과했습니다. 일부 ZIP을 나누어 불러오세요.');
         continue;
       }
-      for (const entry of entries) {
+      for (const entry of analyzable) {
         const name = entry.name.replace(/\\/g, '/');
         const type = kind(name);
         if (!type) continue;
