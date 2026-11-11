@@ -1,0 +1,41 @@
+/* V0.6 — 좁은 작업실에서도 검수 내용을 가리지 않는 테마 현황 한 줄 */
+#view-audit .smart-dashboard {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #262d40;
+  border-bottom: 1px solid #2e3345;
+  background: #141826;
+  gap: 3px;
+  padding: 6px 12px;
+}
+.smart-theme-list { display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.smart-theme-button { flex: 0 0 auto; display: flex; align-items: center; gap: 5px;
+  border: 1px solid #35384d; border-radius: 7px; padding: 6px 9px;
+  background: #1e2332; color: #bac3d8; font-size: 11px; cursor: pointer; min-height: 31px; }
+.smart-theme-button:hover { background: #302940; border-color: #67578b; }
+.smart-theme-button.active { border-color: #a28adb; background: #403056; color: #f4edff; }
+.smart-theme-button .smart-tiny { color: #8f99ac; font-size: 10px; }
+.smart-theme-button.active .smart-tiny { color: #dfd2ff; }
+.smart-theme-button .smart-dot { width: 6px; height: 6px; border-radius: 50%; background: #666f85; }
+.smart-theme-button .smart-dot.partial { background: #c5a276; }
+.smart-theme-button .smart-dot.ready { background: #8ac0ab; }
+.smart-dashboard-bottom { min-height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.smart-status { color: #aab4c8; font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+.smart-actions { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; }
+.smart-actions button { cursor: pointer; background: #2b2842; color: #d1c5f4; border: 1px solid #484465; font-size: 10px;
+  border-radius: 6px; padding: 5px 9px; white-space: nowrap; }
+.smart-actions button:hover:not(:disabled) { background: #44335d; }
+.smart-actions button:disabled { opacity: .4; cursor: not-allowed; }
+#view-audit #audit-detail .smart-coverage-note { color: #a1a9c2; font-size: 11px; }
+@media (max-width: 980px) {
+  #view-audit .smart-dashboard { padding: 5px 8px; }
+  .smart-dashboard-bottom { flex-wrap: wrap; gap: 6px; }
+  .smart-status { flex: 1; }
+}
+@media (max-width: 760px) {
+  .smart-theme-list { overflow-x: auto; }
+  .smart-dashboard-bottom { display: block; }
+  .smart-actions { margin-top: 5px; }
+  .smart-actions button { padding: 5px 7px; }
+}
