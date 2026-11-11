@@ -5,6 +5,7 @@ import { createAuditReader } from './audit-reader.js';
 import { createImplementationPanel } from './effect-implementation-ui.js';
 import { implementationMarkdown } from './effect-implementation.js';
 import { isOptionalInstallPath } from './package-versions.js';
+import { createImportNoticeViewer } from './import-notice-ui.js';
 import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
@@ -18,6 +19,7 @@ let result = null;
 let selectedKey = null;
 let filter = 'all';
 let themeFilter = '전체';
+const importNotices = createImportNoticeViewer();
 
 function dom(tag, className, value) {
   const node = document.createElement(tag);
@@ -205,20 +207,14 @@ function render() {
   const previousScroll = list.scrollTop;
   list.replaceChildren();
   if (!result) {
+    importNotices.render(null);
     list.append(dom('p', 'audit-empty', '원문 ZIP과 패키지 ZIP을 함께 올려 비교 검사를 시작하세요.'));
     $('audit-detail').replaceChildren(dom('p', 'audit-empty', '검사 후 카드를 선택하면 발견된 항목과 근거를 확인할 수 있어요.'));
     reader.sync();
     return;
   }
 
-  const warnings = $('audit-warnings');
-  warnings.replaceChildren();
-  if (result.warnings.length) {
-    const summary = dom('details', 'audit-warning-list');
-    summary.append(dom('summary', '', '가져오기·버전 경고 ' + result.warnings.length + '건'),
-      dom('pre', '', result.warnings.join('\n')));
-    warnings.append(summary);
-  }
+  importNotices.render(result);
 
   const rows = result.cards.filter((c) => (themeFilter === '전체' || c.theme === themeFilter) && (filter === 'all' ||
     (filter === 'issues' ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error') :
