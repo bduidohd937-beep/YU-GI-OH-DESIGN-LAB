@@ -4,6 +4,7 @@ import { buildCardPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.
 import { createAuditReader } from './audit-reader.js';
 import { createImplementationPanel } from './effect-implementation-ui.js';
 import { implementationMarkdown } from './effect-implementation.js';
+import { isOptionalInstallPath } from './package-versions.js';
 import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
@@ -81,8 +82,12 @@ async function readImportFiles(files) {
       try { archive = await globalThis.JSZip.loadAsync(file, { checkCRC32: true }); }
       catch (error) { warnings.push(file.name + ' : ZIP을 열 수 없음 — ' + error.message); continue; }
       const entries = Object.values(archive.files).filter((e) => !e.dir);
-      // ZIP 내부 이미지·문서 등의 무관한 파일은 분석 항목 수에 포함하지 않습니다.
-      const analyzable = entries.filter((e) => kind(e.name));
+      // 선택 설치용 부가 CDB·Lua는 본체와 섞지 않습니다. 명시적으로 개별 업로드하면 분석합니다.
+      const optional = entries.filter((e) => kind(e.name) && isOptionalInstallPath(e.name));
+      if (optional.length) warnings.push(file.name + ' : 별도 선택 설치용 TXT/CDB/Lua ' +
+        optional.length + '개는 본체 자동 검수에서 제외했습니다. 개별 파일로 추가하면 분석할 수 있습니다.');
+      // ZIP 내부 이미지·문서·선택 설치 파일은 분석 항목 수에 포함하지 않습니다.
+      const analyzable = entries.filter((e) => kind(e.name) && !isOptionalInstallPath(e.name));
       entriesSeen += analyzable.length;
       if (entriesSeen > MAX_FILES) {
         warnings.push('검사 대상 TXT/CDB/Lua가 총 120개를 초과했습니다. 일부 ZIP을 나누어 불러오세요.');
