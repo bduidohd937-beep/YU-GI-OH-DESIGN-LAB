@@ -91,3 +91,19 @@ test('검수 카드의 정적 분석과 실전 미검증 표기는 유지',()=>{
   assert.equal(r.coverage.hasLua,false);
   assert.match(r.note,/실제 효과 발동/);
 });
+
+test('천망성역 V0.9.1 19장 + V0.9.2 교체 2장 = 테마 카드 Lua 19종으로 표시',()=>{
+  const cdb=Array.from({length:19},(_,i)=>({
+    id:String(990470100+i),name:'천망성역－카드'+i,type:0x21,desc:'①: 효과.',strings:[],origin:'천망성역_V0.9.1.cdb'
+  }));
+  const lua=Array.from({length:19},(_,i)=>({
+    name:'script/c'+(990470100+i)+'.lua',
+    origin:'천망성역_V0.9.1.zip',
+    text:'function s.initial_effect(c) end'
+  }));
+  lua.push({...lua[9],origin:'천망성역_V0.9.2_긴급패치.zip',text:'function s.initial_effect(c) c:RegisterEffect(c) end'});
+  lua.push({...lua[16],origin:'천망성역_V0.9.2_긴급패치.zip',text:'function s.initial_effect(c) c:RegisterEffect(c) end'});
+  const result=buildAudit({cdbCards:cdb,luaFiles:lua});
+  assert.equal(result.counts.lua,19);
+  assert.equal(result.coverage.byTheme['천망성역'].cardLua,19);
+});
