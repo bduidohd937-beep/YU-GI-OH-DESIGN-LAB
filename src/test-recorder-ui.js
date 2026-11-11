@@ -1,7 +1,7 @@
 // V0.7.3 — 수동 EDOPro 검증 기록 UI. 로그는 업로드하지 않고 브라우저에만 저장합니다.
 import {buildManualTestPlan} from './smart-audit.js';
 import {TEST_RECORDS_KEY,STATUSES,MAX_RECORDS,decodeTestRecords,encodeTestRecords,
-  makeTestEntry,mergeTestRecords,latestForCases,summarizeRecordedTests,recordedTestMarkdown} from './test-records.js';
+  makeTestEntry,mergeTestRecords,latestForCases,summarizeRecordedTests,recordedTestMarkdown,effectiveTestStatus} from './test-records.js';
 
 const $=(id)=>document.getElementById(id);
 function el(tag,className='',text) {
@@ -43,7 +43,7 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
     const latest=latestForCases(records);
     return current.cases.filter((item)=>{
       const saved=latest.get(item.key);
-      return (status==='all' || (status==='untested' ? !saved : saved?.status===status)) &&
+      return (status==='all' || effectiveTestStatus(item,saved)===status) &&
         (!q || (item.name+' '+item.title+' '+item.id).toLocaleLowerCase('ko').includes(q));
     });
   };
@@ -59,8 +59,9 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
     }
     records=next;
   }
-  function statusLabel(saved) {
-    return saved ? STATUSES[saved.status] : '미실행';
+  function statusLabel(test,saved) {
+    const computed=effectiveTestStatus(test,saved);
+    return computed==='untested' ? '미실행' : STATUSES[computed];
   }
   function formatTime(iso) {
     try{return new Date(iso).toLocaleString('ko-KR');}
@@ -74,7 +75,7 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
     }
     const recent=records.filter((entry)=>entry.caseKey===test.key).sort((a,b)=>b.time.localeCompare(a.time));
     const latest=recent[0]||null;
-    detail.append(el('div','runtime-eyebrow',test.theme+' / '+test.id+' / '+statusLabel(latest)));
+    detail.append(el('div','runtime-eyebrow',test.theme+' / '+test.id+' / '+statusLabel(test,latest)));
     detail.append(el('h3','runtime-case-title',test.name));
     detail.append(el('h4','runtime-case-subtitle',test.title));
     const task=el('section','runtime-task');
@@ -83,6 +84,10 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
       el('div','runtime-task-source','자료에 연결된 Lua: '+(test.lua||'미연결')+
         ' · 실제 설치 여부는 사용자가 확인해야 합니다.'));
     detail.append(task);
+    if(latest && effectiveTestStatus(test,latest)==='retest' && latest.status!=='retest') {
+      detail.append(el('p','runtime-retest-notice',
+        '검사에 등록된 Lua 파일 버전 또는 효과 문구가 마지막 수동 시험 기록과 달라졌습니다. 이전 판정은 기록에 남기고 현재 버전은 재검증 필요로 분류합니다.'));
+    }
 
     const form=el('form','runtime-result-form');
     const head=el('h4','',latest?'새 시험 결과 추가 · 이전 기록 보존':'첫 시험 결과 기록');
@@ -181,8 +186,8 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
       const button=el('button','runtime-case-item'+(selectedCaseKey===test.key?' selected':''));
       button.type='button';
       button.append(el('span','',test.title),
-        el('small','runtime-state runtime-'+(latest.get(test.key)?.status||'untested'),
-          statusLabel(latest.get(test.key))));
+        el('small','runtime-state runtime-'+effectiveTestStatus(test,latest.get(test.key)),
+          statusLabel(test,latest.get(test.key))));
       button.addEventListener('click',()=>{
         selectedCaseKey=test.key;
         render();
