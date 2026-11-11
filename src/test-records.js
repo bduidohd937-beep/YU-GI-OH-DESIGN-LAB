@@ -12,7 +12,7 @@ const validStatus = (value) => Object.prototype.hasOwnProperty.call(STATUSES,val
 export function parseLuaErrorReferences(log = '') {
   const matches = [];
   const text = String(log).slice(0,16000);
-  const regex = /(?:^|[\\/\s(])c(\d{6,10})\.lua(?::(\d{1,6}))?/gim;
+  const regex = /\bc(\d{6,10})\.lua(?::(\d{1,6}))?/gim;
   const seen = new Set();
   for (const hit of text.matchAll(regex)) {
     const key = hit[1] + ':' + (hit[2] || '');
