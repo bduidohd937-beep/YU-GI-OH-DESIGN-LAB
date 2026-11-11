@@ -1,0 +1,36 @@
+/* V0.4: 파일을 공유하며 보관하는 간결한 관리 UI */
+.topbar-right .assets-open,.topbar-right .assets-top-add{font:inherit;letter-spacing:0;text-transform:none;border-radius:7px;color:#c8c2e1;white-space:nowrap}
+.topbar-right .assets-open{border:1px solid #48425f;background:#211d32;padding:7px 10px;cursor:pointer;font-size:11px}
+.topbar-right .assets-open strong{color:#c9b6ff}
+.topbar-right .assets-open:hover{background:#352b50}
+.topbar-right .assets-top-add{border:1px solid #6c59a4;background:#453568;color:#f0e6ff;padding:8px 10px;cursor:pointer;font-size:11px}
+.assets-dialog{width:min(690px,calc(100vw - 28px));max-height:min(760px,88dvh);margin:auto;padding:0;border-radius:15px;border:1px solid #56476f;background:#121620;color:#e9eaf7;box-shadow:0 25px 75px #000a;overflow:hidden}
+.assets-dialog::backdrop{background:#040612cc;backdrop-filter:blur(5px)}
+.assets-dialog-head{padding:23px 24px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(120deg,#26203d,#161826)}
+.assets-dialog-head .eyebrow{margin-bottom:6px}
+.assets-dialog-head h2{font-size:20px;letter-spacing:-.5px;margin:0}
+.assets-close{border:1px solid #524766;background:#25213b;color:#d7cbf7;border-radius:7px;padding:8px 12px;cursor:pointer;font-size:12px}
+.assets-close:hover{background:#3a2d59}
+.assets-explain{margin:14px 23px;color:#a7adbf;font-size:12px;line-height:1.75}
+.assets-toolbar{padding:0 23px 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.assets-toolbar .primary-button{min-height:35px}
+.assets-danger{cursor:pointer;border:1px solid #735057;background:#37252d;color:#ffbdc7;border-radius:7px;font-size:11px;padding:8px 11px}
+.assets-danger:disabled{opacity:.4;cursor:not-allowed}
+.assets-total{margin-left:auto;font-size:11px;color:#aeb7c9}
+.assets-message{font-size:11px;line-height:1.7;min-height:27px;margin:0;padding:6px 23px 10px;color:#a4d9bb}
+.assets-message.is-error{color:#ffb4a6}
+.assets-list{margin:0 18px;min-height:95px;max-height:min(420px,44dvh);overflow:auto;border:1px solid #303548;border-radius:9px;background:#0d111c;overscroll-behavior:contain}
+.assets-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-bottom:1px solid #252b3a}
+.assets-item:last-child{border-bottom:0}
+.assets-item-main{min-width:0}
+.assets-item-name{font-size:12px;color:#e2e2ef;font-weight:700;overflow-wrap:anywhere;line-height:1.6}
+.assets-item-meta{font-size:10px;color:#8994ac;margin-top:4px}
+.assets-conflict{font-size:10px;color:#eab48a;margin-top:7px}
+.assets-muted{font-size:10px;color:#99a1b3;margin-top:5px}
+.assets-remove{border:1px solid #5d4652;border-radius:6px;padding:6px 9px;background:#2b1e2b;color:#ffb6c5;font-size:11px;cursor:pointer;flex-shrink:0}
+.assets-remove:hover{background:#482935}
+.assets-remove:disabled{opacity:.4;cursor:not-allowed}
+.assets-empty{padding:32px;text-align:center;color:#838ca2;font-size:12px}
+.assets-disclaimer{font-size:10px;line-height:1.75;color:#858ea6;margin:12px 23px 21px}
+@media(max-width:1050px){.topbar-right .build-tag{display:none}.topbar-right{gap:5px}}
+@media(max-width:710px){.topbar-right{display:flex;gap:4px}.topbar-right>.dot,.topbar-right>.build-tag{display:none}.topbar-right .assets-open,.topbar-right .assets-top-add{font-size:10px;padding:6px}.assets-dialog-head{padding:17px}.assets-explain{margin:12px 16px}.assets-toolbar{padding:0 16px 12px}.assets-message{padding:5px 16px}.assets-list{margin:0 10px}.assets-disclaimer{margin:12px 15px 20px}}
