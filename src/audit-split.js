@@ -47,11 +47,13 @@ function setupAuditSplit() {
   };
   const setCollapsed = (next, persist = false) => {
     collapsed = !!next;
-    grid.classList.toggle('audit-list-collapsed', collapsed);
-    list.inert = collapsed;
-    handle.inert = collapsed;
-    toggle.setAttribute('aria-expanded', String(!collapsed));
-    toggle.setAttribute('aria-pressed', String(collapsed));
+    // 모바일에서는 목록이 위에 표시되므로 PC의 접힘 설정을 임시로 적용하지 않습니다.
+    const applied = collapsed && window.innerWidth > 760;
+    grid.classList.toggle('audit-list-collapsed', applied);
+    list.inert = applied;
+    handle.inert = applied;
+    toggle.setAttribute('aria-expanded', String(!applied));
+    toggle.setAttribute('aria-pressed', String(applied));
     toggle.textContent = collapsed ? '◧ 목록 펼치기 · 탐색 모드' : '◧ 목록 접기 · 본문 넓히기';
     if (persist) save();
   };
@@ -103,6 +105,7 @@ function setupAuditSplit() {
   handle.addEventListener('dblclick', () => setWidth(AUDIT_SPLIT_DEFAULT, true));
   toggle.addEventListener('click', () => setCollapsed(!collapsed, true));
   window.addEventListener('resize', () => {
+    setCollapsed(collapsed);
     if (!collapsed && window.innerWidth > 760) setWidth(width);
   });
   setWidth(width);
