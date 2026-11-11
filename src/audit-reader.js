@@ -1,5 +1,6 @@
 // V0.5.2: 전체 화면으로 근거·수정안을 읽는 검수 UI. 읽기 전용이며 파일은 변경하지 않습니다.
 import { buildCardPlan, cardPlanMarkdown } from './fix-planner.js';
+import { createImplementationPanel } from './effect-implementation-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const INFO_ONLY = new Set(['CDB_NOT_IMPORTED','LUA_NOT_IMPORTED','SOURCE_ID_UNSPECIFIED','SOURCE_NOT_IMPORTED','SOURCE_EFFECT_UNSTRUCTURED']);
@@ -66,6 +67,9 @@ export function createAuditReader({ getResult, getSelectedKey, getThemeFilter = 
       infoRow('Lua',card.lua)
     );
     wrap.append(meta);
+    if (card.effectImplementation?.scriptAvailable) {
+      wrap.append(createImplementationPanel(card.effectImplementation,{expanded:true}));
+    }
 
     const steps = actionSteps(card);
     const missingCdb = !card.cdb;
