@@ -141,7 +141,7 @@ function render() {
   $('audit-stat-lua').textContent = summary.lua;
   $('audit-stat-issues').textContent = summary.error + summary.warning;
   $('audit-export').disabled = !result?.cards?.length;
-  $('fix-export').disabled = !result?.cards?.some((c) => buildCardPlan(c).steps.some((step) => step.priority <= 2));
+  $('fix-export').disabled = !result?.cards?.length;
   const panelRoot = $('검수실');
   panelRoot.classList.toggle('audit-has-results', !!result?.cards?.length);
   panelRoot.classList.toggle('audit-no-implementation', !!result?.cards?.length && !result.coverage.hasCdb && !result.coverage.hasLua);
@@ -345,7 +345,7 @@ $('fix-export').addEventListener('click', () => {
   const url = URL.createObjectURL(new Blob([report], { type: 'text/markdown;charset=utf-8' }));
   const link = dom('a');
   link.href = url;
-  link.download = '종언성서_카드별_수정검토안_V0.5.1.md';
+  link.download = '종언성서_카드별_수정검토안_V0.5.2.md';
   document.body.append(link);
   link.click();
   link.remove();
