@@ -227,7 +227,7 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   }
   const summary = countStatuses(rows);
   return {
-    documents: parsed.documents, cards: rows,
+    documents: parsed.documents, skippedDocuments: parsed.skippedDocuments || [], cards: rows,
     counts: { ...summary, source: sourceCards.length, cdb: new Set(cdbCards.map((c) => String(c.id))).size,
       lua: new Set(luaFiles.filter((f) => /^c\d+\.lua$/i.test(f.name.split('/').pop())).map((f) => f.name.split('/').pop())).size },
     warnings, coverage: { hasSource: !!sourceCards.length, hasCdb, hasLua, byTheme: themeCoverage.themes,
