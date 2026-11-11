@@ -1,6 +1,7 @@
 import { parseDocuments, THEMES } from './parser.js';
 import { classifyCard, summarize, makeReport } from './rules.js';
 import { splitCardEffects } from './effects.js';
+import { createReader } from './reader.js';
 
 const state = { documents: [], warnings: [], theme: '전체', search: '', keyword: '', selected: null };
 let lastRenderedCardKey = null;
@@ -177,6 +178,10 @@ function renderDetail(card) {
   const result = classifyCard(card);
   byId.detail.append(el('div', 'detail-kicker', card.theme + ' / ' + card.version));
   byId.detail.append(el('h3', 'detail-name', card.name));
+  const readButton = el('button', 'detail-reader-button', '⤢ 이 카드 원문 크게 보기');
+  readButton.type = 'button';
+  readButton.addEventListener('click', () => reader.open());
+  byId.detail.append(readButton);
   const meta = el('div', 'detail-meta');
   meta.append(el('span', '', card.id ? 'CARD ID ' + card.id : 'ID 원문 미기재'));
   meta.append(el('span', '', '출처 ' + card.fileName));
@@ -190,13 +195,14 @@ function renderDetail(card) {
     const stack = el('div', 'detail-effect-stack');
     const bar = el('div', 'effect-toolbar');
     bar.append(el('div', 'detail-section', '카드 효과 · 선택해서 펼치기'));
-    const expand = el('button', 'effect-expand-all', '모두 펼치기');
+    const expand = el('button', 'effect-expand-all', '모두 접기');
     expand.type = 'button';
     bar.append(expand);
     byId.detail.append(bar);
     const disclosures = [];
     for (const part of effectParts.blocks) {
       const section = el('details', 'effect-disclosure');
+      section.open = true;
       const heading = el('summary', '', part.section + ' ' + part.label);
       const content = el('pre', '', part.text);
       section.append(heading, content);
@@ -245,6 +251,7 @@ function renderNotes() {
 
 function render() {
   const summary = summarize(state.documents);
+  $('view-library').classList.toggle('has-library-data', summary.cardCount > 0);
   $('stat-themes').replaceChildren(document.createTextNode(String(summary.themeCount) + ' '));
   $('stat-themes').append(el('small', '', '/ 5'));
   $('stat-cards').textContent = String(summary.cardCount);
@@ -262,7 +269,14 @@ function render() {
   if (key !== lastRenderedCardKey) byId.detail.scrollTop = 0;
   lastRenderedCardKey = key;
   byId.export.disabled = !summary.cardCount;
+  reader.sync();
 }
+
+const reader = createReader({
+  getCards: filteredCards,
+  getActiveKey: () => state.selected,
+  onSelect: (key) => { state.selected = key; render(); }
+});
 
 byId.input.addEventListener('change', (event) => loadFiles(event.target.files));
 byId.drop.addEventListener('click', () => byId.input.click());
