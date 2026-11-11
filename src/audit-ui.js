@@ -2,6 +2,7 @@ import { readCardDatabase } from './cdb.js';
 import { buildAudit, auditMarkdown } from './audit.js';
 import { buildCardPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.js';
 import { createAuditReader } from './audit-reader.js';
+import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
 const BYTES_ZIP = 20 * 1024 * 1024;
@@ -13,6 +14,7 @@ const $ = (id) => document.getElementById(id);
 let result = null;
 let selectedKey = null;
 let filter = 'all';
+let themeFilter = '전체';
 
 function dom(tag, className, value) {
   const node = document.createElement(tag);
@@ -134,6 +136,41 @@ function rankIssue(issues) {
     issues.some((x) => x.severity === 'warning') ? 'warning' : 'info';
 }
 
+function renderSmartDashboard() {
+  const dashboard = buildThemeDashboard(result);
+  const list = $('smart-theme-list');
+  list.replaceChildren();
+  const buttons = [
+    {theme:'전체',source:dashboard.totals.source,cdb:dashboard.totals.cdb,lua:dashboard.totals.lua,status:'전체'},
+    ...dashboard.themes
+  ];
+  for (const theme of buttons) {
+    const button = dom('button','smart-theme-button' + (themeFilter === theme.theme ? ' active':''));
+    button.type = 'button';
+    button.setAttribute('aria-pressed', String(themeFilter === theme.theme));
+    const dot = dom('span','smart-dot ' + (theme.cdb && theme.lua ? 'ready' : theme.source || theme.cdb || theme.lua ? 'partial' : ''));
+    const counts = dom('span','smart-tiny','원문 '+theme.source+' · DB '+theme.cdb+' · Lua '+theme.lua);
+    button.append(dot,dom('strong','',theme.theme),counts);
+    button.addEventListener('click',()=>{
+      if (themeFilter === theme.theme) return;
+      themeFilter = theme.theme;
+      selectedKey = null;
+      $('audit-detail').scrollTop = 0;
+      render();
+    });
+    list.append(button);
+  }
+  const item = dashboard.themes.find((x)=>x.theme===themeFilter);
+  const status = item
+    ? item.theme+' · '+item.status+' · CDB 연결 '+item.withCdb+'종 · Lua 연결 '+item.withLua+'종 · 정적 문제 후보 '+item.codeCandidates+'건 · 실전 미검증'
+    : '전체 '+dashboard.totals.listed+'종 · 자료 연결 '+dashboard.totals.ready+'종(CDB+Lua) · 정적 문제 후보 '+dashboard.totals.candidates+'건 · 실전 미검증';
+  const unknown = dashboard.unknownCdb || dashboard.unknownLua
+    ? ' · 미분류 자료: CDB '+dashboard.unknownCdb+'종/Lua '+dashboard.unknownLua+'개' : '';
+  $('smart-status').textContent = status + unknown;
+  $('smart-report-export').disabled = !result?.cards?.length;
+  $('smart-test-export').disabled = !buildManualTestPlan(result,{theme:themeFilter}).cases.length;
+}
+
 function render() {
   const summary = result?.counts || { source: 0, cdb: 0, lua: 0, error: 0, warning: 0, info: 0 };
   $('audit-stat-source').textContent = summary.source;
@@ -142,6 +179,7 @@ function render() {
   $('audit-stat-issues').textContent = summary.error + summary.warning;
   $('audit-export').disabled = !result?.cards?.length;
   $('fix-export').disabled = !result?.cards?.length;
+  renderSmartDashboard();
   const panelRoot = $('검수실');
   panelRoot.classList.toggle('audit-has-results', !!result?.cards?.length);
   panelRoot.classList.toggle('audit-no-implementation', !!result?.cards?.length && !result.coverage.hasCdb && !result.coverage.hasLua);
@@ -173,10 +211,10 @@ function render() {
     warnings.append(summary);
   }
 
-  const rows = result.cards.filter((c) => filter === 'all' ||
+  const rows = result.cards.filter((c) => (themeFilter === '전체' || c.theme === themeFilter) && (filter === 'all' ||
     (filter === 'issues' ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error') :
       filter === 'lua' ? c.issues.some((i) => Number.isInteger(i.line)) :
-      filter === 'fix' ? buildCardPlan(c).steps.some((step) => step.priority <= 2) : c.status === filter));
+      filter === 'fix' ? buildCardPlan(c).steps.some((step) => step.priority <= 2) : c.status === filter)));
   if (!rows.length) list.append(dom('p', 'audit-empty', '해당 조건의 카드가 없습니다.'));
   for (const card of rows) {
     const button = dom('button', 'audit-card' + (card.key === selectedKey ? ' selected' : ''));
@@ -325,7 +363,28 @@ export async function refreshAudit(files) {
 const reader = createAuditReader({
   getResult: () => result,
   getSelectedKey: () => selectedKey,
+  getThemeFilter: () => themeFilter,
   onSelect: (key) => { selectedKey = key; render(); }
+});
+function saveTextFile(text, filename) {
+  const url = URL.createObjectURL(new Blob([text], {type:'text/markdown;charset=utf-8'}));
+  const a = dom('a');
+  a.href = url;
+  a.download = filename;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+$('smart-report-export').addEventListener('click',()=>{
+  if (!result?.cards?.length) return;
+  saveTextFile(themeAuditMarkdown(buildThemeDashboard(result)),'종언성서_테마별_스마트검수현황_V0.6.md');
+});
+$('smart-test-export').addEventListener('click',()=>{
+  if (!result?.cards?.length) return;
+  const plan = buildManualTestPlan(result,{theme:themeFilter});
+  if (!plan.cases.length) return;
+  saveTextFile(manualTestMarkdown(plan),'종언성서_'+(themeFilter==='전체'?'전체':themeFilter)+'_EDOPro_수동시험목록_V0.6.md');
 });
 $('audit-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
 $('audit-export').addEventListener('click', () => {
