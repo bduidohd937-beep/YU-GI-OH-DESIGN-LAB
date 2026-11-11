@@ -4,131 +4,168 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="커스텀 유희왕 테마의 원문을 브라우저에서 안전하게 열람하고 기초 검수하는 무료 연구소">
-  <title>YU-GI-OH DESIGN LAB · 원문 분석 연구소</title>
+  <meta name="description" content="유희왕 커스텀 카드 원문 자료실·CDB·Lua 교차 검수 연구소">
+  <title>YU-GI-OH DESIGN LAB · 카드 설계 연구소</title>
   <link rel="stylesheet" href="./src/styles.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
-  <script type="module" src="./src/main.js"></script>
   <link rel="stylesheet" href="./src/audit.css">
+  <link rel="stylesheet" href="./src/layout.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
+  <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/audit-ui.js"></script>
+  <script type="module" src="./src/layout.js"></script>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="./" aria-label="YU-GI-OH DESIGN LAB 홈">
+      <a class="brand" href="./" aria-label="YU-GI-OH DESIGN LAB 처음 화면">
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.1</span></div>
-      <nav class="side-nav" aria-label="연구 기능">
-        <div class="nav-link active"><span>▦</span> 카드 원문 자료실 <span class="nav-end">01</span></div>
-        <div class="nav-link disabled" title="다음 버전 예정"><span>◇</span> 효과·규칙 검사 <span class="nav-end">예정</span></div>
-        <div class="nav-link disabled" title="다음 버전 예정"><span>♧</span> 덱 연구소 <span class="nav-end">예정</span></div>
-        <div class="nav-link disabled" title="다음 버전 예정"><span>◈</span> 자동 시험실 <span class="nav-end">예정</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.3</span></div>
+      <nav class="side-nav" aria-label="작업실 이동">
+        <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
+          <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
+        </button>
+        <button type="button" class="nav-link" data-workspace-target="audit" aria-controls="view-audit">
+          <span>◇</span> 원문·코드 검수 <span class="nav-end">02</span>
+        </button>
+        <button type="button" class="nav-link" data-workspace-target="deck" aria-controls="view-deck">
+          <span>♧</span> 덱 연구소 <span class="nav-end">준비 중</span>
+        </button>
+        <div class="nav-link disabled" aria-disabled="true"><span>◈</span> 자동 시험실 <span class="nav-end">예정</span></div>
       </nav>
       <div class="side-bottom">
-        <div class="privacy-card"><div class="privacy-head">● 로컬 분석 모드</div><p>올린 파일은 브라우저 안에서만 처리하며 서버로 전송하지 않습니다.</p></div>
+        <div class="privacy-card">
+          <div class="privacy-head">● 브라우저 내부 분석</div>
+          <p>선택한 파일 내용은 서버에 올리지 않고 이 탭 안에서만 처리합니다.</p>
+        </div>
         <a class="repo-link" href="https://github.com/bduidohd937-beep/YU-GI-OH-DESIGN-LAB" target="_blank" rel="noopener noreferrer">GitHub 저장소 ↗</a>
       </div>
     </aside>
 
     <main class="workspace">
       <header class="topbar">
-        <div class="breadcrumbs">PROJECT GENESIS <span>/</span> 종언성서 <span>/</span> 카드 연구소</div>
-        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.1</span></div>
+        <div class="breadcrumbs">PROJECT GENESIS <span>/</span> DESIGN LAB <span>/</span> <b id="current-view-name">카드 자료실</b></div>
+        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.3</span></div>
       </header>
 
-      <section class="hero">
-        <div>
-          <p class="eyebrow">YOUR CARD UNIVERSE, ORGANIZED.</p>
-          <h1>테마 설계의 혼란을<br><em>검증 가능한 기록</em>으로.</h1>
-          <p class="intro">카드 원문 모음집을 올리면 다섯 세력의 카드를 분류하고, 검색하고, 검수할 항목을 정리합니다. 지금은 규칙 기반 분석이며 실제 듀얼을 대신하지 않습니다.</p>
-          <div class="hero-actions">
-            <label for="file-input" class="primary-button">＋ 원문 ZIP / TXT 불러오기</label>
-            <button type="button" id="export-report" class="secondary-button" disabled>진단 보고서 저장 ↓</button>
+      <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
+        <button type="button" role="tab" id="tab-library" class="workspace-tab active" data-workspace-target="library" aria-controls="view-library" aria-selected="true">▦ <span>카드 자료실</span></button>
+        <button type="button" role="tab" id="tab-audit" class="workspace-tab" data-workspace-target="audit" aria-controls="view-audit" aria-selected="false" tabindex="-1">◇ <span>교차 검수</span></button>
+        <button type="button" role="tab" id="tab-deck" class="workspace-tab" data-workspace-target="deck" aria-controls="view-deck" aria-selected="false" tabindex="-1">♧ <span>덱 연구소</span><small>예정</small></button>
+        <span class="tabs-context">테마 설계 · 원문 관리 · 정적 검수</span>
+      </nav>
+
+      <section class="workspace-view" id="view-library" role="tabpanel" aria-labelledby="tab-library">
+        <div class="view-heading">
+          <div>
+            <p class="eyebrow">CARD LIBRARY / V0.3</p>
+            <h1>카드 원문 자료실 <span>설계 기록을 한 화면에서</span></h1>
+          </div>
+          <div class="view-actions">
+            <label class="primary-button" for="file-input">＋ 원문 ZIP / TXT 불러오기</label>
+            <button type="button" id="export-report" class="secondary-button" disabled>기초 진단 저장 ↓</button>
           </div>
           <input id="file-input" type="file" accept=".zip,.txt" multiple hidden>
         </div>
-        <div class="hero-emblem" aria-hidden="true"><div class="emblem-outer"><div class="emblem-inner">✧</div></div><span>ARCHIVE · ANALYZE · VERIFY</span></div>
-      </section>
 
-      <div class="stats" aria-label="불러온 원문 통계">
-        <div class="stat"><span>등록된 세력</span><strong id="stat-themes">0 <small>/ 5</small></strong></div>
-        <div class="stat"><span>읽은 카드 원문</span><strong id="stat-cards">0</strong></div>
-        <div class="stat"><span>분류된 키워드</span><strong id="stat-keywords">0</strong></div>
-        <div class="stat"><span>검증 단계</span><strong class="stat-stage">원문 정리</strong></div>
-      </div>
-
-      <section class="import-panel" id="dropzone" aria-label="파일 가져오기 영역" tabindex="0">
-        <div class="upload-mark">↥</div>
-        <div><strong>원문 ZIP을 이곳에 놓으세요</strong><p>다섯 테마의 TXT를 한 번에 불러오거나 여러 TXT를 선택할 수 있습니다. CDB·Lua·YDK의 직접 검수는 차기 버전에서 지원합니다.</p></div>
-        <label for="file-input" class="subtle-button">파일 선택</label>
-      </section>
-
-      <div id="message" class="message" role="status" aria-live="polite">아직 원문을 불러오지 않았습니다. 기존 《종언성서》 백업 ZIP을 선택해 주세요.</div>
-
-      <section class="content-panel">
-        <div class="section-head"><div><p class="eyebrow">CARD INDEX</p><h2>카드 원문 라이브러리</h2></div><div class="section-caption">실제 업로드한 원문만 표시합니다</div></div>
-        <div id="theme-tabs" class="theme-tabs" aria-label="테마 선택"></div>
-        <div class="toolbar">
-          <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="카드명, 효과, ID 검색..." aria-label="카드 검색" autocomplete="off"></label>
-          <select id="keyword-filter" aria-label="효과 키워드"><option value="">모든 키워드</option></select>
-          <span id="result-count" class="result-count">0종</span>
+        <div class="quick-summary" aria-label="원문 자료 통계">
+          <span>세력 <strong id="stat-themes">0 <small>/ 5</small></strong></span>
+          <span>원문 카드 <strong id="stat-cards">0</strong></span>
+          <span>효과 키워드 <strong id="stat-keywords">0</strong></span>
+          <span class="summary-stage">검사 수준 <b>기초 분류</b></span>
         </div>
-        <div class="browse-grid">
-          <div id="card-list" class="card-list" aria-label="카드 목록"><div class="empty-list">원문을 불러오면 카드 목록이 여기에 나타납니다.</div></div>
-          <article id="card-detail" class="card-detail" aria-live="polite"><div class="empty-detail"><div class="detail-symbol">✧</div><h3>카드를 선택하세요</h3><p>원문 텍스트, 카드 ID, 자동 분류 및 추가 확인 사항을 표시합니다.</p></div></article>
+
+        <div class="file-strip" id="dropzone" role="button" aria-label="원문 파일 선택 또는 놓기" tabindex="0">
+          <span class="strip-icon">↥</span>
+          <span>원문 ZIP을 여기로 끌어오거나 위의 <strong>파일 불러오기</strong>를 사용하세요.</span>
+          <span class="strip-limit">파일은 브라우저에만 유지</span>
         </div>
-      </section>
+        <div id="message" class="message compact-message" role="status" aria-live="polite">종언성서 원문 ZIP을 불러오면 카드 목록이 나타납니다.</div>
 
-      <section class="notes-panel"><div><p class="eyebrow">DESIGN NOTES</p><h2>원문에 기록된 미결 사항</h2><p>분석 도구의 추측이 아니라 원문 파일의 ‘변경 및 검증 메모’를 그대로 보여줍니다.</p></div><div id="document-notes" class="document-notes">파일을 불러오면 원문 메모가 표시됩니다.</div></section>
-
-
-      <section class="audit-panel" id="검수실">
-        <div class="audit-header">
-          <div>
-            <p class="eyebrow">STATIC AUDIT · V0.2</p>
-            <h2>원문 · CDB · Lua 교차 검수</h2>
-            <p>원문 ZIP과 EDOPro 설치 패키지 ZIP을 동시에 선택하면 카드별 파일 누락, 카드명/ID 불일치, 효과 문구 차이, Lua 설명문 누락 등을 정적 검사합니다.</p>
+        <section class="content-panel">
+          <div class="section-head">
+            <div><p class="eyebrow">CARD INDEX</p><h2>카드 목록 <span class="muted-heading">/ 효과 전문</span></h2></div>
+            <div class="section-caption">선택한 카드만 상세 표시</div>
           </div>
-          <span class="audit-version">NO API · BROWSER ONLY</span>
-        </div>
-        <div class="audit-upload">
-          <div>
-            <strong>① 종언성서 원문 ZIP + ② 각 테마 시험패키지 ZIP</strong>
-            <p>여러 파일을 한 번에 선택하세요. ZIP / TXT / CDB / LUA 지원 · 원문 업로드 없이 CDB만 넣으면 원문 대비 검사는 불가합니다.</p>
+          <div id="theme-tabs" class="theme-tabs" aria-label="테마 선택"></div>
+          <div class="toolbar">
+            <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="카드명 · 효과 · ID 검색" aria-label="카드 검색" autocomplete="off"></label>
+            <select id="keyword-filter" aria-label="효과 키워드"><option value="">모든 키워드</option></select>
+            <span id="result-count" class="result-count">0종</span>
           </div>
-          <label class="primary-button" for="audit-input">＋ 검수 자료 불러오기</label>
+          <div class="browse-grid">
+            <div id="card-list" class="card-list" aria-label="카드 목록"><div class="empty-list">원문을 불러오면 카드 목록이 나타납니다.</div></div>
+            <article id="card-detail" class="card-detail" aria-live="polite"><div class="empty-detail">카드를 선택하면 원문을 볼 수 있습니다.</div></article>
+          </div>
+        </section>
+
+        <details class="notes-drawer">
+          <summary>▤ 원문 변경·검증 메모 <span>필요할 때 펼쳐보기</span></summary>
+          <div id="document-notes" class="document-notes">파일을 불러오면 원문 메모가 표시됩니다.</div>
+        </details>
+      </section>
+
+      <section class="workspace-view" id="view-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
+        <div class="view-heading">
+          <div>
+            <p class="eyebrow">STATIC AUDIT / V0.2</p>
+            <h1>원문 · CDB · Lua 교차 검수 <span>정적 검사 전용</span></h1>
+          </div>
+          <div class="view-actions">
+            <label class="primary-button" for="audit-input">＋ 검수 ZIP / CDB / Lua 불러오기</label>
+            <button type="button" id="audit-export" class="secondary-button" disabled>검수 보고서 저장 ↓</button>
+          </div>
           <input id="audit-input" type="file" accept=".zip,.txt,.cdb,.lua" multiple hidden>
         </div>
-        <div id="audit-message" class="audit-message" role="status" aria-live="polite">검수 자료를 불러오지 않았습니다.</div>
-        <div class="audit-stats">
-          <div><span>원문</span><strong id="audit-stat-source">0</strong></div>
-          <div><span>CDB 카드</span><strong id="audit-stat-cdb">0</strong></div>
-          <div><span>카드 Lua</span><strong id="audit-stat-lua">0</strong></div>
-          <div><span>오류 후보 + 검토 필요</span><strong id="audit-stat-issues">0</strong></div>
+
+        <div class="audit-panel" id="검수실">
+          <div class="audit-upload">
+            <div>
+              <strong>원문 ZIP + 시험패키지 ZIP을 한 번에 선택해 주세요.</strong>
+              <p>파일을 서버에 업로드하지 않고 브라우저 안에서 카드 ID·효과 문구·Lua 누락을 대조합니다. 결과는 정적 검사이며 실제 엔진 검증은 아닙니다.</p>
+            </div>
+            <label for="audit-input" class="subtle-button">파일 선택</label>
+          </div>
+          <div id="audit-message" class="audit-message" role="status" aria-live="polite">검수 자료를 불러오지 않았습니다.</div>
+          <div class="audit-stats">
+            <div><span>원문</span><strong id="audit-stat-source">0</strong></div>
+            <div><span>CDB 카드</span><strong id="audit-stat-cdb">0</strong></div>
+            <div><span>카드 Lua</span><strong id="audit-stat-lua">0</strong></div>
+            <div><span>오류 후보 + 경고</span><strong id="audit-stat-issues">0</strong></div>
+          </div>
+          <div class="audit-controls">
+            <label for="audit-filter">결과 보기</label>
+            <select id="audit-filter">
+              <option value="all">전체 카드</option>
+              <option value="issues">오류·경고 있는 카드</option>
+              <option value="error">오류 후보</option>
+              <option value="warning">검토 필요</option>
+              <option value="info">정보 / 미확인</option>
+            </select>
+            <span class="audit-static-note">실제 EDOPro 시험과 별개</span>
+          </div>
+          <div id="audit-warnings"></div>
+          <div class="audit-grid">
+            <div id="audit-results" class="audit-results" aria-label="교차 검수 카드 결과"></div>
+            <article id="audit-detail" class="audit-detail" aria-live="polite"></article>
+          </div>
+          <div class="audit-caveat">주의: 정적 분석 결과는 오류 후보이며, 실제 OCG 재정·Lua 실행·카드 강도를 증명하지 않습니다.</div>
         </div>
-        <div class="audit-controls">
-          <label for="audit-filter">표시:</label>
-          <select id="audit-filter">
-            <option value="all">전체 카드</option>
-            <option value="issues">오류·경고 있는 카드</option>
-            <option value="error">오류 후보</option>
-            <option value="warning">검토 필요</option>
-            <option value="info">정보 / 미확인</option>
-          </select>
-          <button type="button" id="audit-export" class="secondary-button" disabled>검수 보고서 저장 ↓</button>
-        </div>
-        <div id="audit-warnings"></div>
-        <div class="audit-grid">
-          <div id="audit-results" class="audit-results" aria-label="교차 검수 카드 결과"></div>
-          <article id="audit-detail" class="audit-detail" aria-live="polite"></article>
-        </div>
-        <div class="audit-caveat">주의: 여기서는 정적 검사만 수행합니다. OCG 재정, 실제 Lua 실행, 효과 발동 여부, 덱 강도 및 AI 대전 적법성은 검증하지 않습니다. 카드 이름·설명 차이는 수정 전 사람이 확인해야 합니다.</div>
       </section>
 
-      <footer class="footer">YU-GI-OH DESIGN LAB · V0.1 · 오픈소스 기반 · 원문 분석 ≠ 엔진 검증 ≠ 실전 밸런스 평가</footer>
+      <section class="workspace-view" id="view-deck" role="tabpanel" aria-labelledby="tab-deck" hidden>
+        <div class="coming-soon">
+          <div class="coming-icon">♧</div>
+          <p class="eyebrow">PLANNED MODULE</p>
+          <h1>덱 연구소</h1>
+          <p>초동률·전개 루트·패말림 위험을 분석하는 기능을 준비 중입니다. 아직 실전 덱 성능을 자동 평가하지는 않습니다.</p>
+          <button type="button" class="secondary-button" data-workspace-target="library">카드 자료실로 돌아가기</button>
+        </div>
+      </section>
+
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.3 UI / V0.2 정적 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 </body>
