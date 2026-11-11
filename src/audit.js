@@ -1,5 +1,6 @@
 import { parseDocuments } from './parser.js';
 import { scanLuaFile } from './lua-inspector.js';
+import { getAssetCoverage } from './theme-classifier.js';
 
 export function normalizeCardName(value = '') {
   return String(value).normalize('NFKC')
@@ -93,6 +94,7 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   const parsed = parseDocuments(textFiles);
   const warnings = [...loadingWarnings, ...parsed.warnings];
   const sourceCards = parsed.documents.flatMap((doc) => doc.cards);
+  const themeCoverage = getAssetCoverage(parsed.documents, cdbCards, luaFiles);
   // CDB만 올린 경우에도 Lua 누락·설명 문자열·공용 스크립트를 검사할 수 있습니다.
   // 단, 원문 대조를 통과한 것으로 판정하지 않습니다.
   const records = sourceCards.length ? sourceCards :
@@ -130,11 +132,14 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
         unique.length ? 'CDB 이름을 기준으로 임시 연결했습니다. 같은 이름의 카드가 여럿이면 수동 확인이 필요합니다.' : '원문에 ID가 없고 연결된 CDB도 없습니다. ID 매칭 여부는 아직 확인하지 않았습니다.'));
     }
 
-    if (hasCdb && !unique.length) {
-      problems.push(issue('error', 'NO_CDB_CARD', '원문에 해당하는 CDB 카드 없음',
-        '원문 이름과 ID로 찾지 못했습니다. 입력한 CDB가 최신 패키지인지 확인하세요.'));
-    }
-    if (!hasCdb) {
+    const scoped = themeCoverage.themes[source.theme];
+    if (!unique.length && hasCdb && scoped?.hasCdb) {
+      problems.push(issue('error', 'NO_CDB_CARD', '해당 테마 CDB에서 카드 매칭 실패',
+        '이 테마에 속한 CDB는 등록되어 있으나 이름·ID로 연결하지 못했습니다. 등록된 CDB가 전체 패키지인지 먼저 확인하세요.'));
+    } else if (!unique.length && hasCdb && scoped && !scoped.hasCdb) {
+      problems.push(issue('info', 'CDB_THEME_NOT_IMPORTED', '이 테마의 CDB 미등록',
+        '다른 테마의 CDB는 있지만 ' + source.theme + ' CDB는 확인되지 않았습니다. 카드 오류가 아닙니다.'));
+    } else if (!unique.length && !hasCdb) {
       problems.push(issue('info', 'CDB_NOT_IMPORTED', 'CDB 미제공',
         '원문↔CDB 검사를 하려면 같은 테마의 .cdb를 추가로 불러오세요.'));
     }
@@ -172,10 +177,16 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
       problems.push(...scanLuaFile(script, {
         card: selected, availableLuaNames: luaFiles.map((file) => file.name)
       }));
-    } else if (hasLua && selected && requiresLua(selected.type)) {
-      problems.push(issue('error', 'NO_CARD_SCRIPT', '카드 Lua 파일 없음',
-        '필요한 파일: c' + effectiveId + '.lua'));
-    } else if (!hasLua) {
+    } else if (selected && requiresLua(selected.type) && scoped?.hasLua) {
+      problems.push(issue('error', 'NO_CARD_SCRIPT', '해당 테마 카드 Lua 파일 누락 의심',
+        '필요한 파일: c' + effectiveId + '.lua. 현재 입력한 Lua 묶음이 완전한 버전인지 확인하세요.'));
+    } else if (selected && requiresLua(selected.type) && hasLua && scoped && !scoped.hasLua) {
+      problems.push(issue('info', 'LUA_THEME_NOT_IMPORTED', '이 테마의 Lua 미등록',
+        '다른 테마의 Lua는 있지만 ' + source.theme + ' Lua는 확인되지 않았습니다.'));
+    } else if ((!selected || !effectiveId) && scoped?.hasLua) {
+      problems.push(issue('info', 'CARD_ID_UNRESOLVED', 'Lua 카드 ID 연결 보류',
+        '해당 테마의 Lua가 등록되어 있지만 이 원문 카드에 연결할 ID를 찾지 못했습니다.'));
+    } else if ((!selected || (selected && requiresLua(selected.type))) && !hasLua) {
       problems.push(issue('info', 'LUA_NOT_IMPORTED', 'Lua 미제공',
         '정적 Lua 검사를 하려면 script 폴더 또는 Lua가 포함된 패키지를 추가로 불러오세요.'));
     }
@@ -183,6 +194,7 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
     rows.push({
       key: source.key, name: source.name, theme: source.theme, id: effectiveId || null,
       source: source.fileName, cdb: selected?.origin || null, lua: script?.origin || null,
+      cdbType: selected?.type ?? null, sourceVersion: source.version || null,
       issues: problems, description: source.description, cdbDescription: selected?.desc || '',
       status: problems.some((p) => p.severity === 'error') ? 'error' :
         problems.some((p) => p.severity === 'warning') ? 'warning' : 'info'
@@ -203,7 +215,8 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
     documents: parsed.documents, cards: rows,
     counts: { ...summary, source: sourceCards.length, cdb: new Set(cdbCards.map((c) => String(c.id))).size,
       lua: new Set(luaFiles.filter((f) => /^c\d+\.lua$/i.test(f.name.split('/').pop())).map((f) => f.name.split('/').pop())).size },
-    warnings, coverage: { hasSource: !!sourceCards.length, hasCdb, hasLua },
+    warnings, coverage: { hasSource: !!sourceCards.length, hasCdb, hasLua, byTheme: themeCoverage.themes,
+      unknownCdbCount: themeCoverage.unknownCdb.length, unknownLuaCount: themeCoverage.unknownLua.length },
     note: '정적 비교 결과입니다. OCG 적법성·Lua 런타임·실제 효과 발동·덱 성능 검증을 의미하지 않습니다.'
   };
 }
