@@ -1,7 +1,9 @@
 import { parseDocuments, THEMES } from './parser.js';
 import { classifyCard, summarize, makeReport } from './rules.js';
+import { splitCardEffects } from './effects.js';
 
 const state = { documents: [], warnings: [], theme: '전체', search: '', keyword: '', selected: null };
+let lastRenderedCardKey = null;
 const $ = (id) => document.getElementById(id);
 const byId = {
   input: $('file-input'), drop: $('dropzone'), message: $('message'), tabs: $('theme-tabs'),
@@ -83,6 +85,7 @@ async function loadFiles(files) {
     state.selected = null;
     byId.search.value = '';
     rebuildKeywordFilter();
+    renderNotes();
     render();
     const count = summarize(state.documents).cardCount;
     setMessage(
@@ -179,7 +182,34 @@ function renderDetail(card) {
   meta.append(el('span', '', '출처 ' + card.fileName));
   byId.detail.append(meta);
   byId.detail.append(el('div', 'detail-kicker', 'CARD TEXT · SOURCE'));
-  byId.detail.append(el('div', 'effect-text', card.description));
+  const effectParts = splitCardEffects(card.description);
+  if (!effectParts.blocks.length) {
+    byId.detail.append(el('div', 'effect-text', card.description));
+  } else {
+    if (effectParts.prefix) byId.detail.append(el('div', 'detail-prefix', effectParts.prefix));
+    const stack = el('div', 'detail-effect-stack');
+    const bar = el('div', 'effect-toolbar');
+    bar.append(el('div', 'detail-section', '카드 효과 · 선택해서 펼치기'));
+    const expand = el('button', 'effect-expand-all', '모두 펼치기');
+    expand.type = 'button';
+    bar.append(expand);
+    byId.detail.append(bar);
+    const disclosures = [];
+    for (const part of effectParts.blocks) {
+      const section = el('details', 'effect-disclosure');
+      const heading = el('summary', '', part.section + ' ' + part.label);
+      const content = el('pre', '', part.text);
+      section.append(heading, content);
+      disclosures.push(section);
+      stack.append(section);
+    }
+    expand.addEventListener('click', () => {
+      const opening = disclosures.some((item) => !item.open);
+      for (const item of disclosures) item.open = opening;
+      expand.textContent = opening ? '모두 접기' : '모두 펼치기';
+    });
+    byId.detail.append(stack);
+  }
   byId.detail.append(el('div', 'detail-section', '키워드 기반 분류 · 효과 성능 판정 아님'));
   const tags = el('div', 'tag-list');
   if (!result.keywords.length) tags.append(el('span', 'tag', '분류 없음'));
@@ -221,11 +251,16 @@ function render() {
   $('stat-keywords').textContent = String(summary.keywords.length);
   renderTabs();
   const cards = filteredCards();
+  const scrollTop = byId.list.scrollTop;
   if (!cards.some((card) => card.key === state.selected)) state.selected = cards[0]?.key || null;
   byId.count.textContent = cards.length + '종';
   renderList(cards);
-  renderDetail(cards.find((card) => card.key === state.selected));
-  renderNotes();
+  byId.list.scrollTop = scrollTop;
+  const activeCard = cards.find((card) => card.key === state.selected);
+  renderDetail(activeCard);
+  const key = activeCard?.key || null;
+  if (key !== lastRenderedCardKey) byId.detail.scrollTop = 0;
+  lastRenderedCardKey = key;
   byId.export.disabled = !summary.cardCount;
 }
 
