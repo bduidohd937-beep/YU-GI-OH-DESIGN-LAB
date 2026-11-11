@@ -148,9 +148,9 @@ function render() {
     return;
   }
 
-  const rows = result.cards.filter((c) => filter === 'all' || (filter === 'issues'
-    ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error')
-    : c.status === filter));
+  const rows = result.cards.filter((c) => filter === 'all' ||
+    (filter === 'issues' ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error') :
+      filter === 'lua' ? c.issues.some((i) => Number.isInteger(i.line)) : c.status === filter));
   if (!rows.length) list.append(dom('p', 'audit-empty', '해당 조건의 카드가 없습니다.'));
   for (const card of rows) {
     const button = dom('button', 'audit-card' + (card.key === selectedKey ? ' selected' : ''));
