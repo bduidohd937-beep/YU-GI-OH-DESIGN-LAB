@@ -362,8 +362,8 @@ export async function refreshAudit(files) {
       '종 / Lua ' + result.counts.lua + '개 · 오류 후보 ' + result.counts.error +
       '건, 경고 ' + result.counts.warning + '건' +
       (diagnostics.reviewCount ? ' · 입력 확인 필요 ' + diagnostics.reviewCount + '건' : '') +
-      (diagnostics.infoCount || diagnostics.skipped.length
-        ? ' · 자료 안내 ' + (diagnostics.infoCount + diagnostics.skipped.length) + '건' : '') +
+      (diagnostics.infoCount ? ' · 처리 안내 ' + diagnostics.infoCount + '건' : '') +
+      (diagnostics.skipped.length ? ' · 참고 TXT ' + diagnostics.skipped.length + '개 자동 제외' : '') +
       ' (실제 EDOPro 테스트 아님)');
   } catch (error) {
     notify('교차 검수 실패: ' + (error?.message || String(error)), true);
