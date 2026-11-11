@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="./src/styles.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script type="module" src="./src/main.js"></script>
+  <link rel="stylesheet" href="./src/audit.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
+  <script type="module" src="./src/audit-ui.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -80,6 +83,50 @@
       </section>
 
       <section class="notes-panel"><div><p class="eyebrow">DESIGN NOTES</p><h2>원문에 기록된 미결 사항</h2><p>분석 도구의 추측이 아니라 원문 파일의 ‘변경 및 검증 메모’를 그대로 보여줍니다.</p></div><div id="document-notes" class="document-notes">파일을 불러오면 원문 메모가 표시됩니다.</div></section>
+
+
+      <section class="audit-panel" id="검수실">
+        <div class="audit-header">
+          <div>
+            <p class="eyebrow">STATIC AUDIT · V0.2</p>
+            <h2>원문 · CDB · Lua 교차 검수</h2>
+            <p>원문 ZIP과 EDOPro 설치 패키지 ZIP을 동시에 선택하면 카드별 파일 누락, 카드명/ID 불일치, 효과 문구 차이, Lua 설명문 누락 등을 정적 검사합니다.</p>
+          </div>
+          <span class="audit-version">NO API · BROWSER ONLY</span>
+        </div>
+        <div class="audit-upload">
+          <div>
+            <strong>① 종언성서 원문 ZIP + ② 각 테마 시험패키지 ZIP</strong>
+            <p>여러 파일을 한 번에 선택하세요. ZIP / TXT / CDB / LUA 지원 · 원문 업로드 없이 CDB만 넣으면 원문 대비 검사는 불가합니다.</p>
+          </div>
+          <label class="primary-button" for="audit-input">＋ 검수 자료 불러오기</label>
+          <input id="audit-input" type="file" accept=".zip,.txt,.cdb,.lua" multiple hidden>
+        </div>
+        <div id="audit-message" class="audit-message" role="status" aria-live="polite">검수 자료를 불러오지 않았습니다.</div>
+        <div class="audit-stats">
+          <div><span>원문</span><strong id="audit-stat-source">0</strong></div>
+          <div><span>CDB 카드</span><strong id="audit-stat-cdb">0</strong></div>
+          <div><span>카드 Lua</span><strong id="audit-stat-lua">0</strong></div>
+          <div><span>오류 후보 + 검토 필요</span><strong id="audit-stat-issues">0</strong></div>
+        </div>
+        <div class="audit-controls">
+          <label for="audit-filter">표시:</label>
+          <select id="audit-filter">
+            <option value="all">전체 카드</option>
+            <option value="issues">오류·경고 있는 카드</option>
+            <option value="error">오류 후보</option>
+            <option value="warning">검토 필요</option>
+            <option value="info">정보 / 미확인</option>
+          </select>
+          <button type="button" id="audit-export" class="secondary-button" disabled>검수 보고서 저장 ↓</button>
+        </div>
+        <div id="audit-warnings"></div>
+        <div class="audit-grid">
+          <div id="audit-results" class="audit-results" aria-label="교차 검수 카드 결과"></div>
+          <article id="audit-detail" class="audit-detail" aria-live="polite"></article>
+        </div>
+        <div class="audit-caveat">주의: 여기서는 정적 검사만 수행합니다. OCG 재정, 실제 Lua 실행, 효과 발동 여부, 덱 강도 및 AI 대전 적법성은 검증하지 않습니다. 카드 이름·설명 차이는 수정 전 사람이 확인해야 합니다.</div>
+      </section>
 
       <footer class="footer">YU-GI-OH DESIGN LAB · V0.1 · 오픈소스 기반 · 원문 분석 ≠ 엔진 검증 ≠ 실전 밸런스 평가</footer>
     </main>
