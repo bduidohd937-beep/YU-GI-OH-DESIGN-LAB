@@ -1,6 +1,7 @@
 import { readCardDatabase } from './cdb.js';
 import { buildAudit, auditMarkdown } from './audit.js';
-import { buildCardPlan, buildFixPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.js';
+import { buildCardPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.js';
+import { createAuditReader } from './audit-reader.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
 const BYTES_ZIP = 20 * 1024 * 1024;
@@ -140,14 +141,36 @@ function render() {
   $('audit-stat-lua').textContent = summary.lua;
   $('audit-stat-issues').textContent = summary.error + summary.warning;
   $('audit-export').disabled = !result?.cards?.length;
-  $('fix-export').disabled = !result?.cards?.some((c) => c.issues.length);
+  $('fix-export').disabled = !result?.cards?.some((c) => buildCardPlan(c).steps.some((step) => step.priority <= 2));
+  const panelRoot = $('검수실');
+  panelRoot.classList.toggle('audit-has-results', !!result?.cards?.length);
+  panelRoot.classList.toggle('audit-no-implementation', !!result?.cards?.length && !result.coverage.hasCdb && !result.coverage.hasLua);
+  const coverage = $('audit-coverage-notice');
+  const lacksCdb = !!result?.cards?.length && !result.coverage.hasCdb;
+  const lacksLua = !!result?.cards?.length && !result.coverage.hasLua;
+  coverage.hidden = !(lacksCdb || lacksLua);
+  if (!coverage.hidden) coverage.textContent = (lacksCdb && lacksLua
+    ? '현재 카드 원문만 ' + result.counts.source + '종 등록됐습니다. CDB·Lua 검사는 아직 진행되지 않았습니다.'
+    : lacksCdb ? 'CDB 카드가 확인되지 않아 원문·CDB 대조를 할 수 없습니다.'
+    : 'Lua가 확인되지 않아 코드 심층 검사를 할 수 없습니다.') +
+    ' 상단 파일 추가에서 해당 테마의 CDB 및 Lua 시험패키지를 등록하세요. 자료 부족은 카드 오류가 아닙니다.';
   const list = $('audit-results');
   const previousScroll = list.scrollTop;
   list.replaceChildren();
   if (!result) {
     list.append(dom('p', 'audit-empty', '원문 ZIP과 패키지 ZIP을 함께 올려 비교 검사를 시작하세요.'));
     $('audit-detail').replaceChildren(dom('p', 'audit-empty', '검사 후 카드를 선택하면 발견된 항목과 근거를 확인할 수 있어요.'));
+    reader.sync();
     return;
+  }
+
+  const warnings = $('audit-warnings');
+  warnings.replaceChildren();
+  if (result.warnings.length) {
+    const summary = dom('details', 'audit-warning-list');
+    summary.append(dom('summary', '', '가져오기·버전 경고 ' + result.warnings.length + '건'),
+      dom('pre', '', result.warnings.join('\n')));
+    warnings.append(summary);
   }
 
   const rows = result.cards.filter((c) => filter === 'all' ||
@@ -173,7 +196,7 @@ function render() {
   const panel = $('audit-detail');
   panel.replaceChildren();
   if (previousKey !== (card?.key || null)) panel.scrollTop = 0;
-  if (!card) { panel.append(dom('p', 'audit-empty', '표시할 카드가 없습니다.')); return; }
+  if (!card) { panel.append(dom('p', 'audit-empty', '표시할 카드가 없습니다.')); reader.sync(); return; }
   panel.append(dom('div', 'audit-detail-heading', card.theme + ' / ' + (card.id || 'ID 미연결')));
   panel.append(dom('h3', 'audit-detail-name', card.name));
   const mapping = dom('div', 'audit-mapping');
@@ -183,6 +206,21 @@ function render() {
     mapping.append(line);
   }
   panel.append(mapping);
+  if (!result.coverage.hasCdb && !result.coverage.hasLua) {
+    const note = dom('section','audit-no-code-note');
+    note.append(
+      dom('h4','','아직 CDB·Lua를 검수하지 않았습니다'),
+      dom('p','','현재 카드 원문만 등록된 상태입니다. 표시된 자료 보강 항목은 개별 카드의 코드 오류가 아닙니다. 최신 테마 CDB와 Lua 패키지를 추가하면 실제 검수 후보가 나타납니다.')
+    );
+    panel.append(note);
+    if (card.description) {
+      const details = dom('details','audit-source-preview');
+      details.append(dom('summary','','카드 원문 펼쳐 읽기'),dom('pre','',card.description));
+      panel.append(details);
+    }
+    reader.sync();
+    return;
+  }
 
   const plan = buildCardPlan(card);
   const planBox = dom('details', 'fix-plan-drawer');
@@ -249,14 +287,7 @@ function render() {
   cdb.append(dom('h5', '', 'CDB 설명'), dom('pre', '', card.cdbDescription || '없음'));
   compare.append(orig, cdb);
   panel.append(compare);
-  const warnings = $('audit-warnings');
-  warnings.replaceChildren();
-  if (result.warnings.length) {
-    const summary = dom('details', 'audit-warning-list');
-    summary.append(dom('summary', '', '파일 범위·중복·가져오기 경고 ' + result.warnings.length + '건'),
-      dom('pre', '', result.warnings.join('\n')));
-    warnings.append(summary);
-  }
+  reader.sync();
 }
 
 // 파일 선택은 공용 자료 관리자가 처리하며, 새로고침 시 저장된 자료를 재검사합니다.
@@ -276,7 +307,9 @@ export async function refreshAudit(files) {
     result = buildAudit(data);
     if (!result.cards.some((card) => card.key === selectedKey)) selectedKey = result.cards[0]?.key || null;
     render();
-    notify('정적 검사 완료 · 원문 ' + result.counts.source + '종 / CDB ' + result.counts.cdb +
+    notify((!result.coverage.hasCdb && !result.coverage.hasLua
+      ? '원문 등록됨 · CDB/Lua 심층 검수는 자료 추가 대기 중 · 원문 '
+      : '정적 검사 완료 · 원문 ') + result.counts.source + '종 / CDB ' + result.counts.cdb +
       '종 / Lua ' + result.counts.lua + '개 · 오류 후보 ' + result.counts.error +
       '건, 경고 ' + result.counts.warning + '건' +
       (result.warnings.length ? ' · 입력 자료 경고 ' + result.warnings.length + '건' : '') +
@@ -288,6 +321,11 @@ export async function refreshAudit(files) {
     $('audit-input').disabled = false;
   }
 }
+const reader = createAuditReader({
+  getResult: () => result,
+  getSelectedKey: () => selectedKey,
+  onSelect: (key) => { selectedKey = key; render(); }
+});
 $('audit-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
 $('audit-export').addEventListener('click', () => {
   if (!result?.cards?.length) return;
