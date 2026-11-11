@@ -22,6 +22,8 @@ export function getNumberedEffects(text = '') {
   for (const line of String(text).replace(/\r/g, '').split('\n')) {
     if (line.includes('【펜듈럼 효과】')) { section = '펜듈럼'; current = null; continue; }
     if (line.includes('【몬스터 효과】')) { section = '몬스터'; current = null; continue; }
+    // 원문 백업의 구분선은 효과 문구가 아닙니다.
+    if (/^\s*(?:={5,}|-{5,})\s*$/.test(line)) continue;
     const match = line.match(/^\s*([①②③④⑤⑥⑦⑧⑨⑩])\s*[:：]/);
     if (match) {
       current = { section, label: match[1], text: line.trim() };
