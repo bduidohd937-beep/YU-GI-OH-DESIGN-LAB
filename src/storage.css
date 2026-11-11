@@ -34,3 +34,8 @@
 .assets-disclaimer{font-size:10px;line-height:1.75;color:#858ea6;margin:12px 23px 21px}
 @media(max-width:1050px){.topbar-right .build-tag{display:none}.topbar-right{gap:5px}}
 @media(max-width:710px){.topbar-right{display:flex;gap:4px}.topbar-right>.dot,.topbar-right>.build-tag{display:none}.topbar-right .assets-open,.topbar-right .assets-top-add{font-size:10px;padding:6px}.assets-dialog-head{padding:17px}.assets-explain{margin:12px 16px}.assets-toolbar{padding:0 16px 12px}.assets-message{padding:5px 16px}.assets-list{margin:0 10px}.assets-disclaimer{margin:12px 15px 20px}}
+
+.assets-item-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.assets-download{border:1px solid #514874;border-radius:6px;background:#2c2742;color:#d5c8fa;padding:6px 9px;font-size:11px;cursor:pointer}
+.assets-download:hover{background:#3d345e}
+@media(max-width:480px){.assets-item-actions{flex-direction:column}.assets-download,.assets-remove{min-width:70px}}
