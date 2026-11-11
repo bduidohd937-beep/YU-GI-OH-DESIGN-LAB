@@ -88,7 +88,7 @@ test('수동 기록은 UI에서만 작성, 직접 실제 EDOPro 시험을 주장
       'runtime-export-json','runtime-export-md','runtime-import-input','runtime-close'])
     assert.match(html,new RegExp('id="'+id+'"'));
   assert.match(ui,/localStorage\.setItem/);
-  assert.match(ui,/JSON 기록/);
+  assert.match(ui,/시험 기록/);
   assert.match(ui,/installedVersion/);
   assert.match(ui,/dialog\.showModal/);
   assert.match(audit,/testRecorder\.sync\(\)/);
