@@ -72,7 +72,7 @@ async function readImports(fileList) {
 }
 
 async function loadFiles(files) {
-  if (!files || !files.length) return;
+  files = Array.from(files || []);
   byId.input.disabled = true;
   setMessage('원문 파일을 분석하고 있습니다...');
   try {
@@ -80,11 +80,8 @@ async function loadFiles(files) {
     const parsed = parseDocuments(result.texts);
     state.documents = parsed.documents;
     state.warnings = [...result.warnings, ...parsed.warnings];
-    state.theme = '전체';
-    state.search = '';
-    state.keyword = '';
-    state.selected = null;
-    byId.search.value = '';
+    if (!state.documents.some((doc) => doc.theme === state.theme)) state.theme = '전체';
+    if (state.documents.length === 0) state.selected = null;
     rebuildKeywordFilter();
     renderNotes();
     render();
@@ -278,7 +275,11 @@ const reader = createReader({
   onSelect: (key) => { state.selected = key; render(); }
 });
 
-byId.input.addEventListener('change', (event) => loadFiles(event.target.files));
+// 업로드는 storage-ui.js가 통합 관리합니다. 같은 저장 파일을 자료실·검수실에서 공유합니다.
+export async function refreshLibrary(files) {
+  const usable = [...(files || [])].filter((file) => /\.(txt|zip)$/i.test(file.name));
+  await loadFiles(usable);
+}
 byId.drop.addEventListener('click', () => byId.input.click());
 byId.drop.addEventListener('dragover', (event) => { event.preventDefault(); byId.drop.classList.add('dragover'); });
 byId.drop.addEventListener('dragleave', () => byId.drop.classList.remove('dragover'));
