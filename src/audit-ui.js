@@ -138,6 +138,7 @@ function render() {
   $('audit-stat-issues').textContent = summary.error + summary.warning;
   $('audit-export').disabled = !result?.cards?.length;
   const list = $('audit-results');
+  const previousScroll = list.scrollTop;
   list.replaceChildren();
   if (!result) {
     list.append(dom('p', 'audit-empty', '원문 ZIP과 패키지 ZIP을 함께 올려 비교 검사를 시작하세요.'));
@@ -157,13 +158,16 @@ function render() {
     const line = dom('span', 'audit-card-title', card.name);
     const note = dom('span', 'audit-card-meta', card.theme + ' · ' + (card.id || 'ID 미연결') + ' · ' + card.issues.length + '건');
     button.append(line, note, dom('span', 'audit-status ' + status, label));
-    button.addEventListener('click', () => { selectedKey = card.key; render(); });
+    button.addEventListener('click', () => { if (selectedKey !== card.key) $('audit-detail').scrollTop = 0; selectedKey = card.key; render(); });
     list.append(button);
   }
+  list.scrollTop = previousScroll;
   const card = rows.find((c) => c.key === selectedKey) || rows[0] || null;
+  const previousKey = selectedKey;
   if (card) selectedKey = card.key;
   const panel = $('audit-detail');
   panel.replaceChildren();
+  if (previousKey !== (card?.key || null)) panel.scrollTop = 0;
   if (!card) { panel.append(dom('p', 'audit-empty', '표시할 카드가 없습니다.')); return; }
   panel.append(dom('div', 'audit-detail-heading', card.theme + ' / ' + (card.id || 'ID 미연결')));
   panel.append(dom('h3', 'audit-detail-name', card.name));
