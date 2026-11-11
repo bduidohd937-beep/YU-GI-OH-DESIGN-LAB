@@ -5,7 +5,7 @@ import { createAuditReader } from './audit-reader.js';
 import { createImplementationPanel } from './effect-implementation-ui.js';
 import { implementationMarkdown } from './effect-implementation.js';
 import { isOptionalInstallPath } from './package-versions.js';
-import { createImportNoticeViewer } from './import-notice-ui.js';
+import { createImportNoticeViewer, categorizeImportNotices } from './import-notice-ui.js';
 import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
@@ -355,12 +355,15 @@ export async function refreshAudit(files) {
     result = buildAudit(data);
     if (!result.cards.some((card) => card.key === selectedKey)) selectedKey = result.cards[0]?.key || null;
     render();
+    const diagnostics = categorizeImportNotices(result);
     notify((!result.coverage.hasCdb && !result.coverage.hasLua
       ? '원문 등록됨 · CDB/Lua 심층 검수는 자료 추가 대기 중 · 원문 '
       : '정적 검사 완료 · 원문 ') + result.counts.source + '종 / CDB ' + result.counts.cdb +
       '종 / Lua ' + result.counts.lua + '개 · 오류 후보 ' + result.counts.error +
       '건, 경고 ' + result.counts.warning + '건' +
-      (result.warnings.length ? ' · 입력 자료 경고 ' + result.warnings.length + '건' : '') +
+      (diagnostics.reviewCount ? ' · 입력 확인 필요 ' + diagnostics.reviewCount + '건' : '') +
+      (diagnostics.infoCount || diagnostics.skipped.length
+        ? ' · 자료 안내 ' + (diagnostics.infoCount + diagnostics.skipped.length) + '건' : '') +
       ' (실제 EDOPro 테스트 아님)');
   } catch (error) {
     notify('교차 검수 실패: ' + (error?.message || String(error)), true);
