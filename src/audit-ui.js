@@ -175,8 +175,8 @@ function renderSmartDashboard() {
   }
   const item = dashboard.themes.find((x)=>x.theme===themeFilter);
   const status = item
-    ? item.theme+' · '+item.status+' · CDB 연결 '+item.withCdb+'종 · Lua 연결 '+item.withLua+'종 · 정적 문제 후보 '+item.codeCandidates+'건 · 실전 미검증'
-    : '전체 '+dashboard.totals.listed+'종 · 자료 연결 '+dashboard.totals.ready+'종(CDB+Lua) · 정적 문제 후보 '+dashboard.totals.candidates+'건 · 실전 미검증';
+    ? item.theme+' · '+item.status+' · CDB 연결 '+item.withCdb+'종 · Lua 연결 '+item.withLua+'종 · 정적 문제 후보 '+item.codeCandidates+'건 · EDOPro 결과는 수동 기록 참조'
+    : '전체 '+dashboard.totals.listed+'종 · 자료 연결 '+dashboard.totals.ready+'종(CDB+Lua) · 정적 문제 후보 '+dashboard.totals.candidates+'건 · EDOPro 결과는 수동 기록 참조';
   const unknown = dashboard.unknownCdb || dashboard.unknownLua
     ? ' · 미분류 자료: CDB '+dashboard.unknownCdb+'종/Lua '+dashboard.unknownLua+'개' : '';
   $('smart-status').textContent = status + unknown;
