@@ -63,7 +63,9 @@ const DIAGNOSTIC_CASES = Object.freeze({
   REASON_BITMASK_COMPARE: ['소재 사유 판정','소재로 묘지에 보내진 후 사유 조건을 만족하는 효과가 발동하는지 확인'],
   ATTACK_API_COMPAT: ['공격력 API','해당 효과를 실행한 뒤 Lua nil 메서드 오류 없이 올바른 공격력 수치가 계산되는지 확인'],
   SHARED_SCRIPT_NOT_IMPORTED: ['공용 Lua 로딩','공용 스크립트를 설치한 환경에서 카드 초기화 오류가 발생하지 않는지 확인'],
-  NO_INITIAL_EFFECT: ['초기화 함수','EDOPro에서 카드를 불러올 때 initial_effect 관련 오류가 없는지 확인']
+  NO_INITIAL_EFFECT: ['초기화 함수','EDOPro에서 카드를 불러올 때 initial_effect 관련 오류가 없는지 확인'],
+  NO_DIRECT_EFFECT_REGISTRATION: ['효과 등록 방식 확인','원문의 번호 효과를 각각 재현하고 공용 함수 또는 다른 등록 경로에서 정상 처리되는지 확인'],
+  EFFECT_REGISTRATION_COUNT_REVIEW: ['번호 효과별 개별 재현','원문 ①②③ 효과를 각각 발동·적용하여 조건·1턴 1번 제한·실제 처리 결과를 개별 확인']
 });
 
 export function buildManualTestPlan(result, {theme = '전체'} = {}) {
