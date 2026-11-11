@@ -1,5 +1,6 @@
 import { readCardDatabase } from './cdb.js';
 import { buildAudit, auditMarkdown } from './audit.js';
+import { buildCardPlan, buildFixPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
 const BYTES_ZIP = 20 * 1024 * 1024;
@@ -139,6 +140,7 @@ function render() {
   $('audit-stat-lua').textContent = summary.lua;
   $('audit-stat-issues').textContent = summary.error + summary.warning;
   $('audit-export').disabled = !result?.cards?.length;
+  $('fix-export').disabled = !result?.cards?.some((c) => c.issues.length);
   const list = $('audit-results');
   const previousScroll = list.scrollTop;
   list.replaceChildren();
@@ -150,7 +152,8 @@ function render() {
 
   const rows = result.cards.filter((c) => filter === 'all' ||
     (filter === 'issues' ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error') :
-      filter === 'lua' ? c.issues.some((i) => Number.isInteger(i.line)) : c.status === filter));
+      filter === 'lua' ? c.issues.some((i) => Number.isInteger(i.line)) :
+      filter === 'fix' ? buildCardPlan(c).steps.some((step) => step.priority <= 2) : c.status === filter));
   if (!rows.length) list.append(dom('p', 'audit-empty', '해당 조건의 카드가 없습니다.'));
   for (const card of rows) {
     const button = dom('button', 'audit-card' + (card.key === selectedKey ? ' selected' : ''));
@@ -179,7 +182,53 @@ function render() {
     line.append(dom('strong', '', name), dom('span', '', text));
     mapping.append(line);
   }
-  panel.append(mapping, dom('h4', 'audit-subhead', '정적 검사 항목'));
+  panel.append(mapping);
+
+  const plan = buildCardPlan(card);
+  const planBox = dom('details', 'fix-plan-drawer');
+  const planSummary = dom('summary', '', '수정 검토안 · ' + plan.steps.length + '건 · 펼쳐보기');
+  planBox.append(planSummary);
+  const planBody = dom('div', 'fix-plan-body');
+  if (!plan.steps.length) {
+    planBody.append(dom('p', 'fix-no-action', '이번 정적 검사에서는 수정 검토 항목이 없습니다. EDOPro 정상 작동을 보증하지는 않습니다.'));
+  }
+  for (const step of plan.steps) {
+    const block = dom('section', 'fix-step fix-level-' + step.priority);
+    const heading = dom('h5', 'fix-step-title', step.priorityLabel + ' · ' + step.problem);
+    block.append(heading);
+    block.append(dom('div', 'fix-step-meta', step.group + ' / ' + step.code + ' / ' + step.basis));
+    const lines = [
+      ['관찰된 내용', step.detail],
+      ['권장 조치', step.suggestedAction],
+      ['확인 방법', step.verify]
+    ];
+    for (const [label, text] of lines) {
+      const row = dom('p', 'fix-step-line');
+      row.append(dom('strong', '', label + ': '), document.createTextNode(text));
+      block.append(row);
+    }
+    for (const evidence of step.evidence) {
+      block.append(dom('div', 'fix-step-source', evidence.file + ':' + evidence.line));
+      if (evidence.snippet) block.append(dom('code', 'audit-evidence-code', evidence.snippet));
+    }
+    planBody.append(block);
+  }
+  if (plan.steps.length) {
+    const copy = dom('button', 'fix-copy', '현재 카드 수정안 복사');
+    copy.type = 'button';
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(cardPlanMarkdown(plan));
+        copy.textContent = '복사 완료 ✓';
+      } catch {
+        copy.textContent = '복사 실패 — 보고서 저장을 이용하세요';
+      }
+    });
+    planBody.append(copy);
+  }
+  planBody.append(dom('p', 'fix-notice', '이 제안은 규칙 기반 검토 목록입니다. Lua·CDB를 자동 수정하거나 EDOPro에서 시험하지 않습니다.'));
+  planBox.append(planBody);
+  panel.append(planBox, dom('h4', 'audit-subhead', '정적 검사 항목'));
   if (!card.issues.length) panel.append(dom('p', 'audit-noissue', '현재 정적 비교에서 문제 후보 없음. 실제 듀얼 정상 작동을 보증하지 않습니다.'));
   for (const item of card.issues) {
     const block = dom('div', 'audit-issue issue-' + item.severity);
@@ -247,6 +296,18 @@ $('audit-export').addEventListener('click', () => {
   const link = dom('a');
   link.href = url;
   link.download = '종언성서_원문_CDB_Lua_심층검수_V0.5.md';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
+$('fix-export').addEventListener('click', () => {
+  if (!result?.cards?.some((c) => c.issues.length)) return;
+  const report = fixPlanMarkdown(result);
+  const url = URL.createObjectURL(new Blob([report], { type: 'text/markdown;charset=utf-8' }));
+  const link = dom('a');
+  link.href = url;
+  link.download = '종언성서_카드별_수정검토안_V0.5.1.md';
   document.body.append(link);
   link.click();
   link.remove();
