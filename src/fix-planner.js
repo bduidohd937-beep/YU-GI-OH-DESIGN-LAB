@@ -1,5 +1,13 @@
 // V0.5.1 — 검수 결과의 '수정 검토안' 생성. 정적 규칙 기반이며 Lua를 자동 수정하지 않습니다.
 const DEFINITIONS = Object.freeze({
+  NO_DIRECT_EFFECT_REGISTRATION: {
+    level: 2, group: '효과 구조', action: 'Lua에 직접 RegisterEffect 호출이 없는 이유를 확인합니다. 공용 함수나 효과 보조 등록 방식이 있는지 먼저 조사하고, 근거 없이 효과를 추가하지 않습니다.',
+    verify: '각 번호 효과에 필요한 상황을 EDOPro에서 재현하여 실제 발동·적용 여부를 확인하고 Lua 로그를 기록합니다.'
+  },
+  EFFECT_REGISTRATION_COUNT_REVIEW: {
+    level: 2, group: '효과 구조', action: '①②③ 번호 효과와 Lua 등록 호출 수의 차이를 조사합니다. 하나의 효과가 여러 처리를 담당하거나 다른 헬퍼를 사용하는지 먼저 확인합니다.',
+    verify: '해당 카드의 각 번호 효과를 독립적으로 재현해 발동 조건·처리 결과·1턴 1번 제한 등을 확인합니다.'
+  },
   NO_INITIAL_EFFECT: {
     level: 1, group: 'Lua 구조', action: '해당 카드의 initial_effect 등록 위치와 함수 선언을 확인한다. 일반 카드 Lua라면 엔진이 호출할 초기화 함수를 구현한다.',
     verify: 'EDOPro에서 카드를 로드한 뒤 실제 효과를 발동해 초기화 오류 여부를 확인한다.'
