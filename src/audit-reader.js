@@ -27,7 +27,7 @@ function emptyCoverage(result) {
   return !result?.coverage?.hasCdb && !result?.coverage?.hasLua;
 }
 
-export function createAuditReader({ getResult, getSelectedKey, onSelect }) {
+export function createAuditReader({ getResult, getSelectedKey, getThemeFilter = () => '전체', onSelect }) {
   const overlay = $('audit-reader-overlay');
   const list = $('audit-reader-list');
   const content = $('audit-reader-content');
@@ -46,6 +46,7 @@ export function createAuditReader({ getResult, getSelectedKey, onSelect }) {
     const result = getResult();
     const cards = result?.cards || [];
     return cards.filter((card) =>
+      (getThemeFilter() === '전체' || card.theme === getThemeFilter()) &&
       (viewFilter === 'all' || actionSteps(card).length > 0) &&
       (!query || (card.name + ' ' + (card.id || '')).toLocaleLowerCase('ko').includes(query))
     );
@@ -67,16 +68,16 @@ export function createAuditReader({ getResult, getSelectedKey, onSelect }) {
     wrap.append(meta);
 
     const steps = actionSteps(card);
-    const missingCdb = !result.coverage?.hasCdb;
-    const missingLua = !result.coverage?.hasLua;
+    const missingCdb = !card.cdb;
+    const missingLua = !card.lua && !(card.cdbType === 0x11);
 
     if (missingCdb || missingLua) {
       const banner = element('section','audit-reader-coverage');
       const h = element('h2','', '검사에 필요한 자료가 부족합니다');
       const info = missingCdb && missingLua
-        ? '현재 카드 원문만 등록되어 있습니다. CDB·Lua 기반 오류 검사는 아직 시작되지 않았습니다.'
-        : missingCdb ? 'CDB가 연결되지 않았습니다. 원문·CDB 대조는 아직 수행할 수 없습니다.'
-        : 'Lua가 연결되지 않았습니다. Lua 효과 구현 검사는 아직 수행할 수 없습니다.';
+        ? '이 카드와 연결된 CDB·Lua가 없습니다. 다른 테마의 파일이 등록되어 있어도 이 카드의 구현 검사는 미진행입니다.'
+        : missingCdb ? '이 카드의 CDB 연결을 확인하지 못했습니다. 해당 테마 CDB가 완전한지 확인하세요.'
+        : '이 카드의 Lua 연결을 확인하지 못했습니다. 해당 테마 스크립트 묶음을 확인하세요.';
       banner.append(h,element('p','',info),element('p','audit-reader-coverage-help','상단의 저장 자료 → 파일 추가로 해당 테마의 최신 .cdb 및 Lua 시험 패키지를 등록하세요. 자료가 없는 것은 카드 오류가 아닙니다.'));
       wrap.append(banner);
     }
@@ -143,7 +144,7 @@ export function createAuditReader({ getResult, getSelectedKey, onSelect }) {
       return;
     }
     if (lastResult !== result) {
-      const relevant = result.cards.some((card) => actionSteps(card).length);
+      const relevant = result.cards.some((card) => (getThemeFilter() === '전체' || card.theme === getThemeFilter()) && actionSteps(card).length);
       viewFilter = relevant ? 'action' : 'all';
       filterInput.value = viewFilter;
       lastResult = result;
