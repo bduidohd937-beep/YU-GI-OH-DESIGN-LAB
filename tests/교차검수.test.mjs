@@ -37,10 +37,11 @@ test('Lua에서 존재하지 않는 CDB 설명 문자열을 쓰면 경고', () =
   assert.ok(r.cards[0].issues.some((x) => x.code === 'DESCRIPTION_MISSING'));
 });
 
-test('CDB만 있고 원문이 없을 때 확정 오류가 아닌 미검증', () => {
+test('CDB만 있고 원문이 없을 때 Lua 검사 가능하며 원문은 미검증', () => {
   const r = buildAudit({ cdbCards: [makeCdb('파계잔영－이단서기관 레아드', '')] });
   assert.equal(r.counts.source, 0);
-  assert.equal(r.cards.length, 0);
+  assert.equal(r.cards.length, 1);
+  assert.ok(r.cards[0].issues.some((x) => x.code === 'SOURCE_NOT_IMPORTED'));
   assert.equal(r.coverage.hasSource, false);
 });
 
