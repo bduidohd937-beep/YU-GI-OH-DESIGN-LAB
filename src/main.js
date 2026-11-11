@@ -265,6 +265,7 @@ function render() {
 }
 
 byId.input.addEventListener('change', (event) => loadFiles(event.target.files));
+byId.drop.addEventListener('click', () => byId.input.click());
 byId.drop.addEventListener('dragover', (event) => { event.preventDefault(); byId.drop.classList.add('dragover'); });
 byId.drop.addEventListener('dragleave', () => byId.drop.classList.remove('dragover'));
 byId.drop.addEventListener('drop', (event) => { event.preventDefault(); byId.drop.classList.remove('dragover'); loadFiles(event.dataTransfer.files); });
