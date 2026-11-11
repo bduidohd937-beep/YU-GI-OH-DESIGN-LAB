@@ -149,7 +149,15 @@ export function createAuditReader({ getResult, getSelectedKey, getThemeFilter = 
       filterInput.value = viewFilter;
       lastResult = result;
     }
-    const rows = visibleCards();
+    let rows = visibleCards();
+    // 테마를 변경했는데 기존 '수정 후보만' 조건에서 카드가 0건이면 전체 카드로 복귀합니다.
+    if (!rows.length && viewFilter === 'action' &&
+      result.cards.some((card) => (getThemeFilter() === '전체' || card.theme === getThemeFilter()) &&
+        (!query || (card.name + ' ' + (card.id || '')).toLocaleLowerCase('ko').includes(query)))) {
+      viewFilter = 'all';
+      filterInput.value = 'all';
+      rows = visibleCards();
+    }
     const requestedKey = getSelectedKey();
     const selected = rows.find((card) => card.key === requestedKey) || rows[0] || null;
     const index = rows.indexOf(selected);
