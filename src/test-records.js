@@ -1,5 +1,7 @@
 // V0.7.3 — EDOPro 수동 시험 기록. 원문과 로그는 브라우저 내부에만 보관합니다.
 // 기록 없는 시험의 상태는 항상 미실행. 입력 로그는 실제 엔진 실행 증거가 아닙니다.
+import {versionFromFilename,compareVersions} from './package-versions.js';
+
 export const TEST_RECORDS_KEY = 'design-lab:edopro-manual-results:v1';
 export const MAX_RECORDS = 1200;
 export const STATUSES = Object.freeze({
@@ -41,6 +43,7 @@ export function sanitizeTestEntry(value) {
     caseTitle:textField(value.caseTitle,200),
     status:value.status,
     installedVersion:textField(value.installedVersion,120),
+    expectedText:textField(value.expectedText,2000),
     notes:textField(value.notes,2500),
     log,
     references:parseLuaErrorReferences(log)
@@ -76,12 +79,22 @@ export function latestForCases(entries = []) {
   return byKey;
 }
 
+export function effectiveTestStatus(test, saved) {
+  if (!saved || !validStatus(saved.status)) return 'untested';
+  // 이전 실행 기록을 남기되, 파일 버전이나 승인 효과 문안이 바뀌면 재시험 대상으로 봅니다.
+  const currentVersion = versionFromFilename(test.lua || '');
+  const recordedVersion = versionFromFilename(saved.installedVersion || '');
+  if (currentVersion && recordedVersion && compareVersions(currentVersion,recordedVersion)!==0) return 'retest';
+  if (saved.expectedText && test.expected && saved.expectedText!==test.expected) return 'retest';
+  return saved.status;
+}
+
 export function summarizeRecordedTests(cases = [], entries = []) {
   const latest = latestForCases(entries);
   const counters = {total:cases.length, untested:0, pass:0, fail:0, blocked:0, retest:0};
   for (const item of cases) {
-    const status=latest.get(item.key)?.status;
-    if (!status || !validStatus(status)) counters.untested++;
+    const status=effectiveTestStatus(item,latest.get(item.key));
+    if (status==='untested') counters.untested++;
     else counters[status]++;
   }
   return counters;
@@ -97,7 +110,7 @@ export function makeTestEntry({test, status, installedVersion='', notes='', log=
     time:time || new Date().toISOString(),
     caseKey:test.key, cardId:bound(test.id,15), cardName:bound(test.name,160),
     theme:bound(test.theme,70), caseTitle:bound(test.title,200),
-    status,installedVersion,notes,log
+    status,installedVersion,notes,log,expectedText:bound(test.expected,2000)
   };
   const entry=sanitizeTestEntry(raw);
   if (!entry) throw new Error('검증 기록 형식이 올바르지 않습니다.');
@@ -135,7 +148,9 @@ export function recordedTestMarkdown(plan, entries = []) {
       '- 시험: '+test.title,
       '- 준비: '+test.steps,
       '- 기대 결과: '+test.expected,
-      '- 상태: '+(saved ? STATUSES[saved.status] : '미실행'),
+      '- 상태: '+(saved ? (effectiveTestStatus(test,saved)==='retest' && saved.status!=='retest'
+        ? '재검증 필요 (검사 파일 버전/효과 문구 변경; 이전 판정 '+STATUSES[saved.status]+')'
+        : STATUSES[effectiveTestStatus(test,saved)]) : '미실행'),
       '- 실제 설치 버전: '+(saved?.installedVersion || '미기록'),
       '- 최근 기록 시각: '+(saved?.time || '미기록'),
       '- 시험 기록 수: '+history.length);
