@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./src/effect-implementation.css">
   <link rel="stylesheet" href="./src/import-notices.css">
   <link rel="stylesheet" href="./src/test-recorder.css">
+  <link rel="stylesheet" href="./src/failure-triage.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -32,7 +33,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.7.3</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.7.4</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -61,7 +62,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.7.3</span></div>
+          <span class="build-tag">ALPHA 0.7.4</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -124,7 +125,7 @@
       <section class="workspace-view" id="view-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
         <div class="view-heading">
           <div>
-            <p class="eyebrow">SMART AUDIT / V0.7.3</p>
+            <p class="eyebrow">SMART AUDIT / V0.7.4</p>
             <h1>효과 구현 구조 검수 <span>원문 · CDB · Lua · 실전 테스트 계획</span></h1>
           </div>
           <div class="view-actions">
@@ -207,7 +208,7 @@
         </div>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.7.3 수동 EDOPro 검증 기록 / 자동 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.7.4 실패 원인 추적·수정안·재시험 관리 / 자동 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 
@@ -218,6 +219,7 @@
         <h2 id="runtime-title">EDOPro 실전 검증 기록</h2>
         <p id="runtime-explainer">실제 EDOPro에서 시험한 결과만 수동 기록합니다. 자동 실행·판정은 하지 않으며 브라우저 데이터 삭제에 대비해 JSON 백업을 권장합니다.</p>
         <div id="runtime-stats" class="runtime-stats" role="status">미실행</div>
+        <button id="runtime-review-shortcut" class="runtime-review-shortcut" type="button" disabled>실패·재검증 조사 목록 보기</button>
       </div>
       <button id="runtime-close" type="button" class="runtime-close">✕ 닫기</button>
     </header>
@@ -227,6 +229,7 @@
           <input id="runtime-search" type="search" placeholder="카드명·ID·효과 검색" aria-label="시험 항목 검색">
           <select id="runtime-filter" aria-label="시험 결과별 필터">
             <option value="all">전체 시험 항목</option>
+            <option value="needs_review">실패·재검증·보류</option>
             <option value="untested">미실행</option>
             <option value="fail">실패</option>
             <option value="retest">재검증 필요</option>
@@ -242,6 +245,7 @@
       <span id="runtime-notice" class="runtime-notice" role="status" aria-live="polite"></span>
       <div class="runtime-footer-actions">
         <button id="runtime-export-md" type="button">시험 결과 보고서 ↓</button>
+        <button id="runtime-export-triage" type="button" disabled>실패 조사·재시험 목록 ↓</button>
         <button id="runtime-export-json" type="button" disabled>기록 백업 JSON ↓</button>
         <label for="runtime-import-input" class="runtime-import-label">백업 JSON 복원</label>
         <input id="runtime-import-input" type="file" accept=".json,application/json" hidden>
