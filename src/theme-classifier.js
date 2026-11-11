@@ -64,18 +64,22 @@ export function getAssetCoverage(documents = [], cdbCards = [], luaFiles = []) {
   }
   const unknownCdb = [];
   const unknownLua = [];
+  const cdbIds = new Set(), luaIds = new Set();
   for (const card of cdbCards) {
     const {theme} = classifyCdbCard(card);
     if (!theme) { unknownCdb.push(card); continue; }
     sets[theme].hasCdb = true;
-    sets[theme].cdbCards++;
+    const key = theme + ':' + card.id;
+    if (!cdbIds.has(key)) { cdbIds.add(key); sets[theme].cdbCards++; }
   }
   for (const file of luaFiles) {
     const {theme,id} = classifyLuaFile(file, cdbById);
     if (!theme) { unknownLua.push(file); continue; }
     if (id) {
       sets[theme].hasLua = true;
-      sets[theme].cardLua++;
+      // V0.9.1 + V0.9.2 패치 파일은 하나의 카드 ID로 집계합니다.
+      const key = theme + ':' + id;
+      if (!luaIds.has(key)) { luaIds.add(key); sets[theme].cardLua++; }
     }
   }
   return { themes: sets, unknownCdb, unknownLua };
