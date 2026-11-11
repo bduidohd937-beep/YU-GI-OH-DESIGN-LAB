@@ -54,6 +54,19 @@ async function draw() {
       info.append(make('div', 'assets-conflict', '같은 파일명의 다른 버전 있음 — 검수 기준을 확인하세요'));
     }
     if (/\.ydk$/i.test(row.name)) info.append(make('div', 'assets-muted', '덱 파일 보관 전용 · 분석 미지원'));
+    const actions = make('div', 'assets-item-actions');
+    const download = make('button', 'assets-download', '원본 저장');
+    download.type = 'button';
+    download.addEventListener('click', () => {
+      const url = URL.createObjectURL(row.blob);
+      const link = make('a');
+      link.href = url;
+      link.download = row.name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    });
     const button = make('button', 'assets-remove', '삭제');
     button.type = 'button';
     button.disabled = busy;
@@ -68,7 +81,8 @@ async function draw() {
       } catch (error) { notice('삭제 실패: ' + error.message, true); }
       finally { busy = false; await draw(); }
     });
-    item.append(info, button);
+    actions.append(download, button);
+    item.append(info, actions);
     list.append(item);
   }
 }
