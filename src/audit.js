@@ -1,6 +1,7 @@
 import { parseDocuments } from './parser.js';
 import { scanLuaFile } from './lua-inspector.js';
 import { getAssetCoverage, classifyCdbCard, classifyLuaFile } from './theme-classifier.js';
+import { inspectEffectImplementation, implementationIssues } from './effect-implementation.js';
 
 export function normalizeCardName(value = '') {
   return String(value).normalize('NFKC')
@@ -191,10 +192,19 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
         '정적 Lua 검사를 하려면 script 폴더 또는 Lua가 포함된 패키지를 추가로 불러오세요.'));
     }
 
+    // 구조 비교는 원문 효과와 Lua 등록 흔적의 관계를 확정하지 않습니다.
+    const effectImplementation = inspectEffectImplementation({
+      sourceEffects: getNumberedEffects(source.description),
+      cdbEffects: getNumberedEffects(selected?.desc || ''),
+      script
+    });
+    problems.push(...implementationIssues(effectImplementation));
+
     rows.push({
       key: source.key, name: source.name, theme: source.theme, id: effectiveId || null,
       source: source.fileName, cdb: selected?.origin || null, lua: script?.origin || null,
       cdbType: selected?.type ?? null, sourceVersion: source.version || null,
+      effectImplementation,
       issues: problems, description: source.description, cdbDescription: selected?.desc || '',
       status: problems.some((p) => p.severity === 'error') ? 'error' :
         problems.some((p) => p.severity === 'warning') ? 'warning' : 'info'
