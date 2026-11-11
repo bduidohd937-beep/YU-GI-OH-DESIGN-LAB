@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./src/styles.css">
   <link rel="stylesheet" href="./src/audit.css">
   <link rel="stylesheet" href="./src/layout.css">
+  <link rel="stylesheet" href="./src/reader.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -47,7 +48,7 @@
     <main class="workspace">
       <header class="topbar">
         <div class="breadcrumbs">PROJECT GENESIS <span>/</span> DESIGN LAB <span>/</span> <b id="current-view-name">카드 자료실</b></div>
-        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.3</span></div>
+        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.3.1</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -60,7 +61,7 @@
       <section class="workspace-view" id="view-library" role="tabpanel" aria-labelledby="tab-library">
         <div class="view-heading">
           <div>
-            <p class="eyebrow">CARD LIBRARY / V0.3</p>
+            <p class="eyebrow">CARD LIBRARY / V0.3.1</p>
             <h1>카드 원문 자료실 <span>설계 기록을 한 화면에서</span></h1>
           </div>
           <div class="view-actions">
@@ -87,7 +88,7 @@
         <section class="content-panel">
           <div class="section-head">
             <div><p class="eyebrow">CARD INDEX</p><h2>카드 목록 <span class="muted-heading">/ 효과 전문</span></h2></div>
-            <div class="section-caption">선택한 카드만 상세 표시</div>
+            <button type="button" id="reader-open" class="reader-launch" disabled>⤢ 원문 크게 읽기</button>
           </div>
           <div id="theme-tabs" class="theme-tabs" aria-label="테마 선택"></div>
           <div class="toolbar">
@@ -168,5 +169,32 @@
       <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.3 UI / V0.2 정적 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
+
+  <section id="reader-overlay" class="reader-overlay" role="dialog" aria-modal="true" aria-labelledby="reader-title" hidden>
+    <header class="reader-header">
+      <div class="reader-brand"><span class="reader-brand-symbol">✦</span><strong>DESIGN LAB</strong><span class="reader-brand-separator">/</span><span>원문 집중 읽기</span></div>
+      <div class="reader-actions">
+        <button type="button" id="reader-prev" class="reader-control">← 이전 카드</button>
+        <span id="reader-position" class="reader-position">0 / 0</span>
+        <button type="button" id="reader-next" class="reader-control">다음 카드 →</button>
+        <span class="reader-actions-divider"></span>
+        <button type="button" id="reader-font-down" class="reader-control reader-font-control" aria-label="원문 글씨 작게">가−</button>
+        <button type="button" id="reader-font-up" class="reader-control reader-font-control" aria-label="원문 글씨 크게">가＋</button>
+        <button type="button" id="reader-copy" class="reader-control">원문 복사</button>
+        <button type="button" id="reader-close" class="reader-close" aria-label="집중 읽기 닫기">✕ 닫기</button>
+      </div>
+    </header>
+    <div class="reader-body">
+      <aside class="reader-sidebar" aria-label="집중 읽기 카드 목록">
+        <div class="reader-sidebar-top"><strong>카드 목록</strong><span id="reader-list-count">0종</span></div>
+        <label class="reader-search-box"><span aria-hidden="true">⌕</span><input id="reader-search" type="search" placeholder="카드명 검색" aria-label="집중 읽기 카드 검색" autocomplete="off"></label>
+        <div id="reader-list" class="reader-list"></div>
+      </aside>
+      <article id="reader-content" class="reader-content" tabindex="0" aria-live="polite">
+        <h1 id="reader-title">카드를 선택하세요</h1>
+      </article>
+    </div>
+    <footer class="reader-footer"><span>ESC 닫기 · ← → 이전/다음 카드</span><span>원문을 수정하지 않고 표시합니다. 카드 성능·실전 검증 아님</span></footer>
+  </section>
 </body>
 </html>
