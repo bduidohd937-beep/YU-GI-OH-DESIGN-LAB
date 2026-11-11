@@ -49,22 +49,74 @@ export function parseDocument(fileName, original) {
   return { theme, version, fileName, cards, notes };
 }
 
+function shouldParseCardDocument(file) {
+  // 안내·해시·검수 보고서는 카드 원문으로 파싱하지 않습니다.
+  // 이름은 비표준이어도 [카드 원문] 표식이 있으면 검사 대상으로 간주합니다.
+  return String(file.text || '').includes('[카드 원문]') ||
+    /(?:원문|card[_-]?source)/i.test(String(file.name || ''));
+}
+
+function cardTextSignature(document) {
+  return JSON.stringify(document.cards.map((card) => [card.id,card.name,card.description]));
+}
+
+function compareDocumentVersion(left, right) {
+  const parse = (version) => {
+    const m = String(version || '').match(/V(\d+)\.(\d+)(?:\.(\d+))?/i);
+    return m ? [Number(m[1]),Number(m[2]),Number(m[3] || 0)] : null;
+  };
+  const a = parse(left.version), b = parse(right.version);
+  if (!a && !b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i]-b[i];
+  return 0;
+}
+
 export function parseDocuments(files) {
   const documents = [];
   const warnings = [];
+  const skippedDocuments = [];
   for (const file of files) {
     if (!/\.txt$/i.test(file.name)) continue;
+    if (!shouldParseCardDocument(file)) {
+      skippedDocuments.push(file.name);
+      continue;
+    }
     try {
       documents.push(parseDocument(file.name, file.text));
     } catch (error) {
       warnings.push(file.name + ': ' + error.message);
     }
   }
-  const deduped = new Map();
-  for (const doc of documents) deduped.set(doc.theme, doc);
-  if (deduped.size !== documents.length) warnings.push('중복 테마 원문이 있어 마지막 파일을 사용했습니다.');
+  const groups = new Map();
+  for (const doc of documents) {
+    if (!groups.has(doc.theme)) groups.set(doc.theme, []);
+    groups.get(doc.theme).push(doc);
+  }
+  const deduped = [];
+  for (const [theme, list] of groups) {
+    let selected = list[0];
+    for (const doc of list.slice(1)) {
+      // 버전이 같으면 마지막 문서를 기준으로 하되, 동등한 카드 원문은 중복 경고하지 않습니다.
+      if (compareDocumentVersion(doc, selected) >= 0) selected = doc;
+    }
+    deduped.push(selected);
+    const signatures = new Set(list.map(cardTextSignature));
+    if (signatures.size > 1) {
+      const hasSameVersionConflict = list.some((doc) =>
+        doc !== selected && compareDocumentVersion(doc, selected) === 0 &&
+        cardTextSignature(doc) !== cardTextSignature(selected));
+      const titles = [...new Set(list.map((doc) => doc.version + ' · ' + doc.fileName))];
+      warnings.push((hasSameVersionConflict
+        ? '원문 버전 충돌 확인 필요: ' : '테마 원문 버전 안내: ') +
+        theme + ' 원문 ' + list.length + '개 중 ' + selected.version + ' (' + selected.fileName +
+        ')을 기준본으로 선택했습니다. 입력된 원문: ' + titles.join(' / '));
+    }
+  }
   return {
-    documents: [...deduped.values()].sort((a, b) => THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme)),
-    warnings
+    documents: deduped.sort((a, b) => THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme)),
+    warnings,
+    skippedDocuments
   };
 }
