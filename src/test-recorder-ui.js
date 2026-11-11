@@ -217,7 +217,7 @@ export function createTestRecorder({getResult,getThemeFilter,getSelectedKey}) {
   filter.addEventListener('change',()=>{selectedCaseKey=null;render();});
   jsonExport.addEventListener('click',()=>{
     if(!records.length) return;
-    downloadText('DESIGN_LAB_실전시험기록_백업_V0.7.3.json',encodeTestRecords(records),'application/json;charset=utf-8');
+    downloadText('디자인랩_실전시험기록_백업_V0.7.3.json',encodeTestRecords(records),'application/json;charset=utf-8');
   });
   markdownExport.addEventListener('click',()=>{
     const p=plan();
