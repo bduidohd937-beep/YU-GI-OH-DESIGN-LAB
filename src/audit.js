@@ -128,6 +128,13 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   const parsed = parseDocuments(textFiles);
   const warnings = [...loadingWarnings, ...parsed.warnings];
   const sourceCards = parsed.documents.flatMap((doc) => doc.cards);
+  // CDB만 올린 경우에도 Lua 누락·설명 문자열·공용 스크립트를 검사할 수 있습니다.
+  // 단, 원문 대조를 통과한 것으로 판정하지 않습니다.
+  const records = sourceCards.length ? sourceCards :
+    [...new Map(cdbCards.map((c) => [String(c.id), c])).values()].map((c) => ({
+      key: 'cdb:' + c.id, name: c.name, theme: '원문 미제공', id: String(c.id),
+      fileName: '원문 미제공', description: ''
+    }));
   const cdbById = groupBy(cdbCards, (c) => String(c.id));
   const cdbByName = groupBy(cdbCards, (c) => normalizeCardName(c.name));
   const luaByName = groupBy(luaFiles, (f) => f.name.split('/').pop().toLowerCase());
@@ -139,8 +146,12 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   const usedCdb = new Set();
   const usedLua = new Set();
 
-  for (const source of sourceCards) {
+  for (const source of records) {
     const problems = [];
+    if (!sourceCards.length) {
+      problems.push(issue('info', 'SOURCE_NOT_IMPORTED', '설계 원문 미제공',
+        'CDB↔Lua 검사만 가능합니다. 효과 원문 일치 여부는 확인하지 않았습니다.'));
+    }
     const explicitCandidates = source.id ? cdbById.get(String(source.id)) || [] : [];
     const nameCandidates = cdbByName.get(normalizeCardName(source.name)) || [];
     const candidates = explicitCandidates.length ? explicitCandidates : nameCandidates;
@@ -176,8 +187,10 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
       if (signatures.size > 1) problems.push(issue('warning', 'CDB_VERSION_CONFLICT',
         '동일 카드 ID에 서로 다른 CDB 버전이 존재',
         '버전이 다른 CDB를 함께 불러왔을 수 있습니다. 어떤 버전을 기준으로 검사할지 확인하세요.'));
-      const mismatch = verifyText(source.description, selected.desc);
-      if (mismatch) problems.push(mismatch);
+      if (sourceCards.length) {
+        const mismatch = verifyText(source.description, selected.desc);
+        if (mismatch) problems.push(mismatch);
+      }
     }
 
     const effectiveId = String(source.id || selected?.id || '');
