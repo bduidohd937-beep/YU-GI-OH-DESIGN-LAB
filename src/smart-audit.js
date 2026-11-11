@@ -80,6 +80,19 @@ export function buildManualTestPlan(result, {theme = '전체'} = {}) {
     };
     if (mechanics) cases.push({...base, key:card.key+':base', title:mechanics.label,
       steps:mechanics.steps, expected:'카드 원문과 CDB 효과에 명시된 결과와 일치해야 함'});
+    // 문장별 효과 재현: 원문 ①②③과 펜듈럼 효과 ①은 별도 체크.
+    // 텍스트는 기대 결과의 근거이며 Lua 변수와 직접 대응하지 않습니다.
+    const numbered = card.effectImplementation?.source?.length
+      ? card.effectImplementation.source : (card.effectImplementation?.cdb || []);
+    for (const [index, effect] of numbered.entries()) {
+      const name = effect.section + ' ' + effect.label;
+      cases.push({
+        ...base, key:card.key+':effect:'+effect.section+':'+effect.label+':'+index,
+        title:name+' 효과 재현',
+        steps:'이 카드의 '+name+' 효과 발동 조건을 구성한 다음 발동 여부, 처리 결과, 1턴 1번 제한을 각각 확인',
+        expected:effect.text, source:'등록된 원문/CDB 효과 문구 · Lua 의미 대응 미검증'
+      });
+    }
     for (const diagnostic of [...new Set(card.issues.map((x) => x.code))]) {
       const spec = DIAGNOSTIC_CASES[diagnostic];
       if (spec) cases.push({...base, key:card.key+':'+diagnostic, title:spec[0],
