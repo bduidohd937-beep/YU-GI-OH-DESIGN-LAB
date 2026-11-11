@@ -30,7 +30,7 @@ test('기록 없는 효과는 미실행으로만 판정',()=>{
   assert.equal(Object.keys(STATUSES).length,4);
 });
 test('실제 설치 버전을 입력하지 않으면 수동 판정 저장 불가',()=>{
-  assert.throws(()=>makeTestEntry({test:single,status:'pass',installedVersion:' '}),/실제로 설치/);
+  assert.throws(()=>makeTestEntry({test:single,status:'pass',installedVersion:' '}),/실제 설치/);
   assert.throws(()=>makeTestEntry({test:single,status:'success',installedVersion:'V0.9.2'}),/수동 판정/);
 });
 test('버전별 시험 기록 두 개는 덮어쓰지 않고 최신 판정만 현황에 반영',()=>{
