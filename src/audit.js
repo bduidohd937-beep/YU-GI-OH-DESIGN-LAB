@@ -2,6 +2,7 @@ import { parseDocuments } from './parser.js';
 import { scanLuaFile } from './lua-inspector.js';
 import { getAssetCoverage, classifyCdbCard, classifyLuaFile } from './theme-classifier.js';
 import { inspectEffectImplementation, implementationIssues } from './effect-implementation.js';
+import { resolveLuaRevision } from './package-versions.js';
 
 export function normalizeCardName(value = '') {
   return String(value).normalize('NFKC')
@@ -168,12 +169,16 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
 
     const effectiveId = String(source.id || selected?.id || '');
     const luaEntries = luaById.get(effectiveId) || [];
-    const script = luaEntries[luaEntries.length - 1] || null;
+    const revision = resolveLuaRevision(luaEntries);
+    const script = revision.script;
     if (script) {
       usedLua.add(effectiveId);
-      if (new Set(luaEntries.map((s) => s.text)).size > 1) {
+      if (revision.patchApplied) {
+        problems.push(issue('info', 'LUA_PATCH_OVERLAY', '버전이 명시된 Lua 긴급 패치 적용',
+          revision.label + ' 패치를 검사 기준으로 사용했습니다. 패치 전 파일도 입력되어 있으나 정상적인 버전 갱신 후보입니다. 설치 여부는 별도 확인해야 합니다.'));
+      } else if (revision.conflict) {
         problems.push(issue('warning', 'LUA_VERSION_CONFLICT', '동일 카드의 서로 다른 Lua 버전이 존재',
-          '같은 카드의 Lua가 여러 버전입니다. 마지막 파일이 임시 기준으로 선택됐습니다.'));
+          '명시적인 상위 버전 패치로 확인되지 않은 서로 다른 Lua입니다. 마지막 입력 파일을 임시 기준으로 선택했습니다.'));
       }
       problems.push(...scanLuaFile(script, {
         card: selected, availableLuaNames: luaFiles.map((file) => file.name)
