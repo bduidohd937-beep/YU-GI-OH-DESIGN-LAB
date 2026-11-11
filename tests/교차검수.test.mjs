@@ -66,7 +66,7 @@ test('Lua가 없으면 필요 카드 Lua 누락 탐지', () => {
   const r = buildAudit({
     textFiles: [makeTxt('파계잔영－이단서기관 레아드')],
     cdbCards: [makeCdb('파계잔영－이단서기관 레아드', '①: 덱에서 카드를 패에 넣는다.')],
-    luaFiles: [makeLua('990489999')]
+    luaFiles: [makeLua('990480999')]
   });
   assert.ok(r.cards[0].issues.some((x) => x.code === 'NO_CARD_SCRIPT'));
 });
