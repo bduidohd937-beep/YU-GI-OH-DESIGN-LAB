@@ -177,12 +177,12 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
       problems.push(...scanLuaFile(script, {
         card: selected, availableLuaNames: luaFiles.map((file) => file.name)
       }));
+    } else if (hasLua && scoped && !scoped.hasLua && (!selected || requiresLua(selected.type))) {
+      problems.push(issue('info', 'LUA_THEME_NOT_IMPORTED', '이 테마의 Lua 미등록',
+        '다른 테마의 Lua는 있지만 ' + source.theme + ' Lua는 확인되지 않았습니다.'));
     } else if (selected && requiresLua(selected.type) && scoped?.hasLua) {
       problems.push(issue('error', 'NO_CARD_SCRIPT', '해당 테마 카드 Lua 파일 누락 의심',
         '필요한 파일: c' + effectiveId + '.lua. 현재 입력한 Lua 묶음이 완전한 버전인지 확인하세요.'));
-    } else if (selected && requiresLua(selected.type) && hasLua && scoped && !scoped.hasLua) {
-      problems.push(issue('info', 'LUA_THEME_NOT_IMPORTED', '이 테마의 Lua 미등록',
-        '다른 테마의 Lua는 있지만 ' + source.theme + ' Lua는 확인되지 않았습니다.'));
     } else if ((!selected || !effectiveId) && scoped?.hasLua) {
       problems.push(issue('info', 'CARD_ID_UNRESOLVED', 'Lua 카드 ID 연결 보류',
         '해당 테마의 Lua가 등록되어 있지만 이 원문 카드에 연결할 ID를 찾지 못했습니다.'));
