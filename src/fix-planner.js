@@ -184,16 +184,41 @@ export function cardPlanMarkdown(card) {
 
 export function fixPlanMarkdown(result) {
   const plan = buildFixPlan(result);
-  const lines = ['# DESIGN LAB — 카드별 수정 검토안 V0.5.1', '',
+  const actionable = plan.cards.filter((card) => card.steps.some((step) => step.priority <= 2));
+  const items = new Map();
+  for (const card of plan.cards) for (const step of card.steps.filter((item) => item.priority === 3)) {
+    const found = items.get(step.code) || { name: step.problem, count: 0 };
+    found.count++;
+    items.set(step.code, found);
+  }
+  const lines = ['# DESIGN LAB — 카드별 수정 검토안 V0.5.2', '',
     '> 정적 검사 결과에서 생성한 규칙 기반 제안입니다. 승인 없는 수정은 실행하지 않았습니다.', '',
-    '대상 카드: ' + plan.counts.cards + '종 / 검토 카드: ' + plan.counts.flaggedCards + '종 / 검토 항목: ' + plan.counts.actions + '건',
-    '즉시 확인 ' + plan.counts.first + '건 · 수정 검토 ' + plan.counts.second + '건 · 자료 보강 ' + plan.counts.third + '건', '',
-    '## 적용 순서', '',
-    '1. 원문·CDB·Lua 입력 버전과 범위를 확인하고 실제 누락인지 구분합니다.',
-    '2. 수정 후보를 검토하고 해당 테마의 정식 원문을 확정합니다.',
-    '3. 원본 파일을 백업한 뒤 승인된 파일만 변경합니다.',
-    '4. 정적 재검사 후 EDOPro에서 해당 효과를 재현합니다.', ''];
-  for (const card of plan.cards.filter((c) => c.steps.length)) lines.push(cardPlanMarkdown(card));
+    '대상 카드: ' + plan.counts.cards + '종 / 실제 수정 검토 대상: ' + actionable.length +
+      '종 / 코드·문구 수정 검토: ' + (plan.counts.first + plan.counts.second) + '건',
+    '자료 범위·미제공 알림: ' + plan.counts.third + '건 (아래에서 유형별로 묶어 표시)', '',
+    '## 진행 순서', '',
+    '1. 현재 입력한 원문·CDB·Lua의 범위를 먼저 확인합니다.',
+    '2. 코드·문구 수정 후보를 확인하고 정식 원문과 맞춰 수정 범위를 승인합니다.',
+    '3. 원본을 백업한 뒤 승인된 파일만 수정하고 정적 재검사를 수행합니다.',
+    '4. 해당 효과를 EDOPro에서 재현하여 실제 작동을 확인합니다.', ''];
+  if (!actionable.length) {
+    lines.push('## 현재 코드 수정 검토 대상 없음', '',
+      '현재 입력 자료에서 실제 수정 검토로 분류된 항목이 없습니다. 이것은 정상 작동이 확인됐다는 뜻이 아닙니다.', '');
+    if (!result?.coverage?.hasCdb || !result?.coverage?.hasLua) lines.push(
+      '현재 CDB 또는 Lua 분석 자료가 부족합니다. 해당 테마의 최신 CDB와 Lua 시험 패키지를 추가한 뒤 다시 검수하세요.', '');
+  } else {
+    lines.push('## 카드별 수정 검토 항목', '');
+    for (const card of actionable) lines.push(cardPlanMarkdown({
+      ...card, steps: card.steps.filter((step) => step.priority <= 2)
+    }));
+  }
+  if (items.size) {
+    lines.push('## 자료 범위·미제공 안내 (유형별 집계)', '',
+      '동일한 정보 안내를 각 카드마다 반복하지 않고 한 번만 표시합니다.', '');
+    for (const [code, entry] of [...items.entries()].sort((a,b) => b[1].count - a[1].count))
+      lines.push('- ' + code + ' · ' + entry.name + ': ' + entry.count + '종');
+    lines.push('');
+  }
   lines.push('---', plan.note, '');
   return lines.join('\n');
 }
