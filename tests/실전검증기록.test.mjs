@@ -5,7 +5,7 @@ import {buildAudit} from '../src/audit.js';
 import {buildManualTestPlan} from '../src/smart-audit.js';
 import {TEST_RECORDS_KEY,STATUSES,parseLuaErrorReferences,makeTestEntry,
   decodeTestRecords,encodeTestRecords,mergeTestRecords,latestForCases,
-  summarizeRecordedTests,recordedTestMarkdown,MAX_RECORDS} from '../src/test-records.js';
+  summarizeRecordedTests,recordedTestMarkdown,MAX_RECORDS,effectiveTestStatus} from '../src/test-records.js';
 
 const single={
   key:'천망성역:990470109:effect:몬스터:①:0',id:'990470109',
@@ -99,4 +99,19 @@ test('기록의 순서와 무관하게 가장 늦은 날짜가 최신 판정',()
   const old=record();
   const newer=record('blocked','V0.9.2','2026-11-11T12:00:00Z','run2');
   assert.equal(latestForCases([newer,old]).get(single.key).status,'blocked');
+});
+
+test('이전 버전 통과 기록은 새 패치 Lua에서 자동 통과로 표시하지 않음',()=>{
+  const previous=record('pass','V0.9.1','2026-11-10T10:00:00Z','v1');
+  assert.equal(effectiveTestStatus(single,previous),'retest');
+  assert.equal(summarizeRecordedTests([single],[previous]).retest,1);
+  assert.equal(summarizeRecordedTests([single],[previous]).pass,0);
+  const markdown=recordedTestMarkdown({theme:'천망성역',cases:[single]},[previous]);
+  assert.match(markdown,/재검증 필요 \(검사 파일 버전\/효과 문구 변경/);
+});
+test('같은 버전이라도 ① 효과 문구가 개정되면 재검증 필요',()=>{
+  const previous=record('pass','V0.9.2','2026-11-11T10:00:00Z','v2');
+  const changed={...single,expected:'①: 수정 후 효과.'};
+  assert.equal(effectiveTestStatus(changed,previous),'retest');
+  assert.equal(effectiveTestStatus(single,previous),'pass');
 });
