@@ -2,6 +2,8 @@ import { readCardDatabase } from './cdb.js';
 import { buildAudit, auditMarkdown } from './audit.js';
 import { buildCardPlan, cardPlanMarkdown, fixPlanMarkdown } from './fix-planner.js';
 import { createAuditReader } from './audit-reader.js';
+import { createImplementationPanel } from './effect-implementation-ui.js';
+import { implementationMarkdown } from './effect-implementation.js';
 import { buildThemeDashboard, themeAuditMarkdown, buildManualTestPlan, manualTestMarkdown } from './smart-audit.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/';
@@ -169,6 +171,8 @@ function renderSmartDashboard() {
   $('smart-status').textContent = status + unknown;
   $('smart-report-export').disabled = !result?.cards?.length;
   $('smart-test-export').disabled = !buildManualTestPlan(result,{theme:themeFilter}).cases.length;
+  $('effect-export').disabled = !result?.cards?.some((card) =>
+    (themeFilter === '전체' || card.theme === themeFilter) && card.effectImplementation?.scriptAvailable);
 }
 
 function render() {
@@ -214,6 +218,7 @@ function render() {
   const rows = result.cards.filter((c) => (themeFilter === '전체' || c.theme === themeFilter) && (filter === 'all' ||
     (filter === 'issues' ? c.issues.some((i) => i.severity === 'warning' || i.severity === 'error') :
       filter === 'lua' ? c.issues.some((i) => Number.isInteger(i.line)) :
+      filter === 'implementation' ? ['count_review','no_direct_registration','helper_review'].includes(c.effectImplementation?.state) :
       filter === 'fix' ? buildCardPlan(c).steps.some((step) => step.priority <= 2) : c.status === filter)));
   if (!rows.length) list.append(dom('p', 'audit-empty', '해당 조건의 카드가 없습니다.'));
   for (const card of rows) {
@@ -244,6 +249,9 @@ function render() {
     mapping.append(line);
   }
   panel.append(mapping);
+  if (card.effectImplementation && (card.cdb || card.lua)) {
+    panel.append(createImplementationPanel(card.effectImplementation));
+  }
   if (!result.coverage.hasCdb && !result.coverage.hasLua) {
     const note = dom('section','audit-no-code-note');
     note.append(
@@ -385,6 +393,11 @@ $('smart-test-export').addEventListener('click',()=>{
   const plan = buildManualTestPlan(result,{theme:themeFilter});
   if (!plan.cases.length) return;
   saveTextFile(manualTestMarkdown(plan),'종언성서_'+(themeFilter==='전체'?'전체':themeFilter)+'_EDOPro_수동시험목록_V0.6.md');
+});
+$('effect-export').addEventListener('click',()=>{
+  if (!result?.cards?.some((card)=>card.effectImplementation?.scriptAvailable)) return;
+  saveTextFile(implementationMarkdown(result,{theme:themeFilter}),
+    '종언성서_'+(themeFilter==='전체'?'전체':themeFilter)+'_효과구현구조_대조_V0.7.md');
 });
 $('audit-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
 $('audit-export').addEventListener('click', () => {
