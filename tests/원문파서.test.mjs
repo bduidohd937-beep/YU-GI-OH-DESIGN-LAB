@@ -47,11 +47,22 @@ test('혈성 01. 형태의 카드 구분', () => {
   assert.deepEqual(parsed.cards.map((c) => c.name), ['혈성-미리엘', '혈성-아그네스']);
 });
 
-test('중복 테마 원문은 마지막 버전 사용하고 경고 표시', () => {
+test('동일한 카드 원문의 중복 저장은 한 번만 보여주고 경고하지 않음', () => {
   const d = txt('파계잔영', '[01] 파계잔영－이단서기관 레아드');
   const result = parseDocuments([{ name: d.name, text: d.text }, { name: d.name, text: d.text }]);
   assert.equal(result.documents.length, 1);
-  assert.ok(result.warnings.some((m) => m.includes('중복')));
+  assert.equal(result.warnings.length, 0);
+});
+
+test('서로 다른 버전이면 입력 순서보다 최신 버전으로 기준본 선택', () => {
+  const v1 = txt('파계잔영', '[01] 파계잔영－이단서기관 레아드');
+  const v2 = {
+    name: '파계잔영_V1.1_원문.txt',
+    text: v1.text.replace(' V1.0', ' V1.1').replace('카드 1장을', '카드 2장을')
+  };
+  const result = parseDocuments([v2,v1]);
+  assert.equal(result.documents[0].version, 'V1.1');
+  assert.ok(result.warnings.some((m) => m.includes('테마 원문 버전 안내:')));
 });
 
 test('서치 분류와 외부 참조는 사실 기반 별도 표시', () => {
@@ -72,8 +83,9 @@ test('보고서에 원문 메모와 검증 범위 제한 포함', () => {
   assert.match(report, /추가 검증 필요/);
 });
 
-test('비원문 파일은 조용히 카드를 만들지 않는다', () => {
+test('비원문 TXT는 오류로 표시하지 않고 검사 제외 목록에 보관', () => {
   const parsed = parseDocuments([{ name: '임의.txt', text: '단순 메모' }]);
   assert.equal(parsed.documents.length, 0);
-  assert.ok(parsed.warnings.length > 0);
+  assert.equal(parsed.warnings.length, 0);
+  assert.deepEqual(parsed.skippedDocuments,['임의.txt']);
 });
