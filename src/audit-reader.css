@@ -93,3 +93,16 @@
   .audit-reader-step h3{font-size:18px}
   .audit-reader-footer{display:none}
 }
+
+/* 카드 구현 자료가 없는 경우 메인 화면에서도 불필요한 중복 정보 대신 원문을 우선 표시 */
+.audit-no-code-note{border:1px solid #60567f;border-left:3px solid #ac9cdd;border-radius:9px;background:#201e30;padding:20px 23px;margin:17px 0}
+.audit-no-code-note h4{color:#e8ddff;font-size:16px;line-height:1.5;margin:0 0 10px}
+.audit-no-code-note p{color:#cad0e2;font-size:14px;line-height:1.85;margin:0}
+.audit-source-preview{border:1px solid #3e455a;border-radius:9px;background:#161b2a;margin:17px 0;overflow:hidden}
+.audit-source-preview summary{padding:13px 17px;font-size:13px;font-weight:700;color:#d0bffd;cursor:pointer}
+.audit-source-preview pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px 20px 24px;line-height:1.85;color:#e1e5f0;font:14px/1.85 "Noto Sans KR",sans-serif;margin:0}
+.audit-panel.audit-has-results .audit-message{padding-top:7px;padding-bottom:7px}
+.audit-panel.audit-has-results .audit-stats>div{padding:9px 13px}
+.audit-panel.audit-has-results .audit-stats strong{font-size:20px}
+.audit-panel.audit-has-results .audit-stats{padding-bottom:9px}
+@media(max-width:780px){.audit-no-code-note{padding:14px;margin:9px 0}.audit-no-code-note h4{font-size:14px}.audit-no-code-note p{font-size:12px}}
