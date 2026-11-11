@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="./src/storage.css">
   <link rel="stylesheet" href="./src/audit-reader.css">
   <link rel="stylesheet" href="./src/audit-layout.css">
+  <link rel="stylesheet" href="./src/smart-audit.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -28,7 +29,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.5.3</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.6</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -57,7 +58,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.5.3</span></div>
+          <span class="build-tag">ALPHA 0.6</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -120,8 +121,8 @@
       <section class="workspace-view" id="view-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
         <div class="view-heading">
           <div>
-            <p class="eyebrow">STATIC AUDIT / V0.5.3</p>
-            <h1>원문 · CDB · Lua 심층 검수 <span>오류 근거 · 수정 검토안</span></h1>
+            <p class="eyebrow">SMART AUDIT / V0.6</p>
+            <h1>테마별 스마트 검수 <span>원문 · CDB · Lua · 수동 테스트 계획</span></h1>
           </div>
           <div class="view-actions">
             <label class="primary-button" for="audit-input">＋ ZIP / CDB / Lua 추가</label>
@@ -148,6 +149,16 @@
             <div><span>오류 후보 + 경고</span><strong id="audit-stat-issues">0</strong></div>
           </div>
           <div id="audit-coverage-notice" class="audit-coverage-notice" hidden></div>
+          <section id="smart-dashboard" class="smart-dashboard" aria-label="테마별 자료·검수 현황">
+            <div id="smart-theme-list" class="smart-theme-list" aria-label="검수할 테마 선택"></div>
+            <div class="smart-dashboard-bottom">
+              <span id="smart-status" class="smart-status" role="status">원문·CDB·Lua 자료를 불러오면 테마별 범위가 나타납니다.</span>
+              <div class="smart-actions">
+                <button id="smart-report-export" type="button" disabled>테마 현황 ↓</button>
+                <button id="smart-test-export" type="button" disabled>EDOPro 테스트 목록 ↓</button>
+              </div>
+            </div>
+          </section>
           <div class="audit-controls">
             <label for="audit-filter">결과 보기</label>
             <select id="audit-filter">
@@ -189,7 +200,7 @@
         </div>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.5.3 가변 검수 패널 / V0.5 Lua 심층 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.6 테마별 스마트 검수 / 실제 EDOPro 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 
