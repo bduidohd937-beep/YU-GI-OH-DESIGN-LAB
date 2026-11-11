@@ -12,12 +12,14 @@
   <link rel="stylesheet" href="./src/reader.css">
   <link rel="stylesheet" href="./src/storage.css">
   <link rel="stylesheet" href="./src/audit-reader.css">
+  <link rel="stylesheet" href="./src/audit-layout.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/audit-ui.js"></script>
   <script type="module" src="./src/layout.js"></script>
   <script type="module" src="./src/storage-ui.js"></script>
+  <script type="module" src="./src/audit-split.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -26,7 +28,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.5.2</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.5.3</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -55,7 +57,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.5.2</span></div>
+          <span class="build-tag">ALPHA 0.5.3</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -118,7 +120,7 @@
       <section class="workspace-view" id="view-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
         <div class="view-heading">
           <div>
-            <p class="eyebrow">STATIC AUDIT / V0.5.2</p>
+            <p class="eyebrow">STATIC AUDIT / V0.5.3</p>
             <h1>원문 · CDB · Lua 심층 검수 <span>오류 근거 · 수정 검토안</span></h1>
           </div>
           <div class="view-actions">
@@ -157,11 +159,20 @@
               <option value="warning">검토 필요</option>
               <option value="info">정보 / 미확인</option>
             </select>
-            <span class="audit-static-note">코드 줄번호 표시 · EDOPro 시험 아님</span>
+            <div class="audit-panel-tools">
+              <button type="button" id="audit-list-toggle" class="audit-list-toggle" aria-controls="audit-results" aria-expanded="true" aria-pressed="false">◧ 목록 접기 · 본문 넓히기</button>
+              <span class="audit-static-note">정적 분석 · 실제 듀얼 미검증</span>
+            </div>
           </div>
           <div id="audit-warnings"></div>
-          <div class="audit-grid">
+          <div class="audit-grid audit-split" id="audit-split" style="--audit-list-width:25%">
             <div id="audit-results" class="audit-results" aria-label="교차 검수 카드 결과"></div>
+            <div id="audit-splitter" class="audit-splitter" role="separator" tabindex="0"
+              aria-label="카드 목록과 검수 상세 영역 너비 조절" aria-orientation="vertical"
+              aria-controls="audit-results" aria-valuemin="15" aria-valuemax="40" aria-valuenow="25"
+              title="드래그하여 목록과 본문 비율 조절 · 키보드 좌우 화살표 조절">
+              <span class="audit-splitter-grip" aria-hidden="true"></span>
+            </div>
             <article id="audit-detail" class="audit-detail" aria-live="polite"></article>
           </div>
           <div class="audit-caveat">주의: 정적 분석 결과는 오류 후보이며, 실제 OCG 재정·Lua 실행·카드 강도를 증명하지 않습니다.</div>
@@ -178,7 +189,7 @@
         </div>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.5.2 검수 집중 읽기 / V0.5 Lua 심층 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.5.3 가변 검수 패널 / V0.5 Lua 심층 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 
