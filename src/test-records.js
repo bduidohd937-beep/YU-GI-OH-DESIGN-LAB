@@ -85,7 +85,7 @@ export function effectiveTestStatus(test, saved) {
   const currentVersion = versionFromFilename(test.lua || '');
   const recordedVersion = versionFromFilename(saved.installedVersion || '');
   if (currentVersion && recordedVersion && compareVersions(currentVersion,recordedVersion)!==0) return 'retest';
-  if (saved.expectedText && test.expected && saved.expectedText!==test.expected) return 'retest';
+  if (saved.expectedText && test.expected && saved.expectedText!==String(test.expected).slice(0,2000)) return 'retest';
   return saved.status;
 }
 
@@ -104,6 +104,8 @@ export function makeTestEntry({test, status, installedVersion='', notes='', log=
   if (!test || typeof test.key !== 'string' || !validStatus(status))
     throw new Error('시험 항목과 수동 판정을 선택해 주세요.');
   if (!installedVersion.trim()) throw new Error('EDOPro에 실제 설치한 카드 버전을 입력해 주세요.');
+  if (status==='fail' && !String(notes).trim() && !String(log).trim())
+    throw new Error('실패 판정에는 실제 증상이나 Lua 로그를 하나 이상 기록해 주세요.');
   const raw = {
     id:id || (typeof crypto!=='undefined' && crypto.randomUUID ? crypto.randomUUID() :
       'local-'+new Date().getTime()+'-'+Math.random().toString(36).slice(2)),
