@@ -10,11 +10,13 @@
   <link rel="stylesheet" href="./src/audit.css">
   <link rel="stylesheet" href="./src/layout.css">
   <link rel="stylesheet" href="./src/reader.css">
+  <link rel="stylesheet" href="./src/storage.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/audit-ui.js"></script>
   <script type="module" src="./src/layout.js"></script>
+  <script type="module" src="./src/storage-ui.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -23,7 +25,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.3</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.4</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -48,7 +50,11 @@
     <main class="workspace">
       <header class="topbar">
         <div class="breadcrumbs">PROJECT GENESIS <span>/</span> DESIGN LAB <span>/</span> <b id="current-view-name">카드 자료실</b></div>
-        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY <span class="build-tag">ALPHA 0.3.1</span></div>
+        <div class="topbar-right"><span class="dot"></span> BROWSER ONLY
+          <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
+          <label for="assets-input" class="assets-top-add">＋ 추가</label>
+          <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
+          <span class="build-tag">ALPHA 0.4</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -61,11 +67,11 @@
       <section class="workspace-view" id="view-library" role="tabpanel" aria-labelledby="tab-library">
         <div class="view-heading">
           <div>
-            <p class="eyebrow">CARD LIBRARY / V0.3.1</p>
+            <p class="eyebrow">CARD LIBRARY / V0.4</p>
             <h1>카드 원문 자료실 <span>설계 기록을 한 화면에서</span></h1>
           </div>
           <div class="view-actions">
-            <label class="primary-button" for="file-input">＋ 원문 ZIP / TXT 불러오기</label>
+            <label class="primary-button" for="file-input">＋ 원문 ZIP / TXT 추가</label>
             <button type="button" id="export-report" class="secondary-button" disabled>기초 진단 저장 ↓</button>
           </div>
           <input id="file-input" type="file" accept=".zip,.txt" multiple hidden>
@@ -80,7 +86,7 @@
 
         <div class="file-strip" id="dropzone" role="button" aria-label="원문 파일 선택 또는 놓기" tabindex="0">
           <span class="strip-icon">↥</span>
-          <span>원문 ZIP을 여기로 끌어오거나 위의 <strong>파일 불러오기</strong>를 사용하세요.</span>
+          <span>원문 ZIP을 끌어오거나 위의 <strong>파일 추가</strong>를 사용하세요. 등록한 자료는 새로고침 후에도 복원됩니다.</span>
           <span class="strip-limit">파일은 브라우저에만 유지</span>
         </div>
         <div id="message" class="message compact-message" role="status" aria-live="polite">종언성서 원문 ZIP을 불러오면 카드 목록이 나타납니다.</div>
@@ -115,7 +121,7 @@
             <h1>원문 · CDB · Lua 교차 검수 <span>정적 검사 전용</span></h1>
           </div>
           <div class="view-actions">
-            <label class="primary-button" for="audit-input">＋ 검수 ZIP / CDB / Lua 불러오기</label>
+            <label class="primary-button" for="audit-input">＋ ZIP / CDB / Lua 추가</label>
             <button type="button" id="audit-export" class="secondary-button" disabled>검수 보고서 저장 ↓</button>
           </div>
           <input id="audit-input" type="file" accept=".zip,.txt,.cdb,.lua" multiple hidden>
@@ -124,7 +130,7 @@
         <div class="audit-panel" id="검수실">
           <div class="audit-upload">
             <div>
-              <strong>원문 ZIP + 시험패키지 ZIP을 한 번에 선택해 주세요.</strong>
+              <strong>자료실의 기존 파일과 합쳐 검사합니다. ZIP과 CDB·Lua를 하나씩 추가할 수 있어요.</strong>
               <p>파일을 서버에 업로드하지 않고 브라우저 안에서 카드 ID·효과 문구·Lua 누락을 대조합니다. 결과는 정적 검사이며 실제 엔진 검증은 아닙니다.</p>
             </div>
             <label for="audit-input" class="subtle-button">파일 선택</label>
@@ -166,7 +172,7 @@
         </div>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.3 UI / V0.2 정적 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.4 자료 보관 / V0.2 정적 검수 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 
@@ -196,5 +202,20 @@
     </div>
     <footer class="reader-footer"><span>ESC 닫기 · ← → 이전/다음 카드</span><span>원문을 수정하지 않고 표시합니다. 카드 성능·실전 검증 아님</span></footer>
   </section>
+<dialog id="assets-dialog" class="assets-dialog" aria-labelledby="assets-title">
+    <div class="assets-dialog-head">
+      <div><p class="eyebrow">LOCAL ASSET LIBRARY · V0.4</p><h2 id="assets-title">내 파일 보관함</h2></div>
+      <button type="button" id="assets-close" class="assets-close" aria-label="파일 보관함 닫기">✕ 닫기</button>
+    </div>
+    <p class="assets-explain">원문 TXT/ZIP, CDB, Lua와 덱(.ydk)을 하나씩 추가할 수 있어요. 실제 자료는 이 브라우저의 로컬 저장 공간에만 보관하며 서버로 전송하지 않습니다.</p>
+    <div class="assets-toolbar">
+      <label for="assets-input" class="primary-button">＋ 파일 추가</label>
+      <button type="button" id="assets-clear" class="assets-danger" disabled>전체 삭제</button>
+      <span id="assets-total" class="assets-total">0개 · 0 B</span>
+    </div>
+    <p id="assets-message" class="assets-message" role="status" aria-live="polite">저장 상태를 확인하고 있습니다.</p>
+    <div id="assets-list" class="assets-list" aria-label="등록한 원본 파일 목록"></div>
+    <p class="assets-disclaimer">같은 내용은 중복 보관하지 않습니다. 같은 이름의 다른 버전은 모두 남기고 충돌을 표시합니다. 브라우저 데이터 삭제·시크릿 모드·저장 공간 정리 시 자료가 사라질 수 있으니 원본 ZIP은 별도로 보관하세요. YDK는 보관만 지원하며 덱 분석 기능은 아직 없습니다.</p>
+  </dialog>
 </body>
 </html>
