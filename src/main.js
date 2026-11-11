@@ -283,7 +283,7 @@ export async function refreshLibrary(files) {
 byId.drop.addEventListener('click', () => byId.input.click());
 byId.drop.addEventListener('dragover', (event) => { event.preventDefault(); byId.drop.classList.add('dragover'); });
 byId.drop.addEventListener('dragleave', () => byId.drop.classList.remove('dragover'));
-byId.drop.addEventListener('drop', (event) => { event.preventDefault(); byId.drop.classList.remove('dragover'); loadFiles(event.dataTransfer.files); });
+byId.drop.addEventListener('drop', (event) => { event.preventDefault(); byId.drop.classList.remove('dragover'); window.dispatchEvent(new CustomEvent('designlab:import-files', { detail: { files: [...event.dataTransfer.files] } })); });
 byId.drop.addEventListener('keydown', (event) => {
   if (event.target === byId.drop && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); byId.input.click(); }
 });
