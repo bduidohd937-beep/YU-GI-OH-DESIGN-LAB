@@ -1,6 +1,6 @@
 import { parseDocuments } from './parser.js';
 import { scanLuaFile } from './lua-inspector.js';
-import { getAssetCoverage } from './theme-classifier.js';
+import { getAssetCoverage, classifyCdbCard, classifyLuaFile } from './theme-classifier.js';
 
 export function normalizeCardName(value = '') {
   return String(value).normalize('NFKC')
@@ -99,12 +99,12 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
   // 단, 원문 대조를 통과한 것으로 판정하지 않습니다.
   const records = sourceCards.length ? sourceCards :
     cdbCards.length ? [...new Map(cdbCards.map((c) => [String(c.id), c])).values()].map((c) => ({
-      key: 'cdb:' + c.id, name: c.name, theme: '원문 미제공', id: String(c.id),
+      key: 'cdb:' + c.id, name: c.name, theme: classifyCdbCard(c).theme || '미분류', id: String(c.id),
       fileName: '원문 미제공', description: ''
     })) : [...new Map(luaFiles.filter((f) => /^c\d{6,10}\.lua$/i.test(f.name.split('/').pop()))
       .map((f) => [f.name.split('/').pop().match(/^c(\d+)\.lua$/i)[1], f])).entries()]
-      .map(([id]) => ({ key: 'lua:' + id, name: 'Lua 카드 ' + id,
-        theme: '원문·CDB 미제공', id, fileName: '원문 미제공', description: '' }));
+      .map(([id, file]) => ({ key: 'lua:' + id, name: 'Lua 카드 ' + id,
+        theme: classifyLuaFile(file).theme || '미분류', id, fileName: '원문 미제공', description: '' }));
   const cdbById = groupBy(cdbCards, (c) => String(c.id));
   const cdbByName = groupBy(cdbCards, (c) => normalizeCardName(c.name));
   const luaById = groupBy(luaFiles.filter((f) => /^c\d{6,10}\.lua$/i.test(f.name.split('/').pop())),
