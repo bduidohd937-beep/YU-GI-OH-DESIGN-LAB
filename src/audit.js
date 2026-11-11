@@ -127,7 +127,7 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
 
     if (!source.id) {
       problems.push(issue('info', 'SOURCE_ID_UNSPECIFIED', '원문에 카드 ID가 없음',
-        'CDB 이름 일치로 연결했습니다. 같은 이름의 카드가 여럿이면 수동 확인이 필요합니다.'));
+        selected ? 'CDB 이름을 기준으로 임시 연결했습니다. 같은 이름의 카드가 여럿이면 수동 확인이 필요합니다.' : '원문에 ID가 없고 연결된 CDB도 없습니다. ID 매칭 여부는 아직 확인하지 않았습니다.'));
     }
 
     if (hasCdb && !unique.length) {
