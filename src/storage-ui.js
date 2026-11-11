@@ -94,6 +94,10 @@ async function addFiles(files) {
   }
 }
 
+window.addEventListener('designlab:import-files', (event) => {
+  addFiles(event.detail?.files || []);
+});
+
 for (const input of inputs) {
   if (!input) continue;
   input.addEventListener('change', async () => {
