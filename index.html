@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="./src/audit-layout.css">
   <link rel="stylesheet" href="./src/smart-audit.css">
   <link rel="stylesheet" href="./src/effect-implementation.css">
+  <link rel="stylesheet" href="./src/import-notices.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -30,7 +31,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.7.1</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.7.2</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -59,7 +60,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.7.1</span></div>
+          <span class="build-tag">ALPHA 0.7.2</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -122,7 +123,7 @@
       <section class="workspace-view" id="view-audit" role="tabpanel" aria-labelledby="tab-audit" hidden>
         <div class="view-heading">
           <div>
-            <p class="eyebrow">SMART AUDIT / V0.7.1</p>
+            <p class="eyebrow">SMART AUDIT / V0.7.2</p>
             <h1>효과 구현 구조 검수 <span>원문 · CDB · Lua · 실전 테스트 계획</span></h1>
           </div>
           <div class="view-actions">
@@ -178,7 +179,7 @@
               <span class="audit-static-note">정적 분석 · 실제 듀얼 미검증</span>
             </div>
           </div>
-          <div id="audit-warnings"></div>
+          <div id="audit-warnings" class="import-notices-bar" role="status" aria-live="polite"></div>
           <div class="audit-grid audit-split" id="audit-split" style="--audit-list-width:25%">
             <div id="audit-results" class="audit-results" aria-label="교차 검수 카드 결과"></div>
             <div id="audit-splitter" class="audit-splitter" role="separator" tabindex="0"
@@ -203,9 +204,25 @@
         </div>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.7.1 실제 패키지 오탐 보정 / EDOPro 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.7.2 입력 자료 정리·넓은 진단창 / EDOPro 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
+
+  <dialog id="audit-notices-dialog" class="import-notices-dialog" aria-labelledby="audit-notices-title" aria-describedby="audit-notices-subtitle">
+    <header class="import-notices-header">
+      <div>
+        <div class="import-notices-eyebrow">DESIGN LAB / IMPORT DIAGNOSTICS</div>
+        <h2 id="audit-notices-title">가져오기 · 버전 진단</h2>
+        <p id="audit-notices-subtitle">카드 원문과 입력 파일의 상태를 표시합니다.</p>
+      </div>
+      <div class="import-notices-header-actions">
+        <button id="audit-notices-copy" type="button" class="import-notices-action">전체 내용 복사</button>
+        <button id="audit-notices-close" type="button" class="import-notices-close">✕ 닫기</button>
+      </div>
+    </header>
+    <div id="audit-notices-body" class="import-notices-body"></div>
+    <footer class="import-notices-footer">자료 판정 안내입니다. 자동으로 카드를 수정하거나 EDOPro 실행 결과를 확정하지 않습니다. · ESC 닫기</footer>
+  </dialog>
 
   <section id="audit-reader-overlay" class="audit-reader-overlay" role="dialog" aria-modal="true" aria-labelledby="audit-reader-title" hidden>
     <header class="audit-reader-header">
