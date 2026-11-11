@@ -215,7 +215,8 @@ function render() {
     panel.append(note);
     if (card.description) {
       const details = dom('details','audit-source-preview');
-      details.append(dom('summary','','카드 원문 펼쳐 읽기'),dom('pre','',card.description));
+      details.open = true; // 코드 자료가 없을 때는 중요한 카드 원문을 기본적으로 보여줍니다.
+      details.append(dom('summary','','카드 원문 · 접기/펼치기'),dom('pre','',card.description));
       panel.append(details);
     }
     reader.sync();
