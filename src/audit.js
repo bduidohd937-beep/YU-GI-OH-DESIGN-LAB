@@ -208,6 +208,9 @@ export function buildAudit({ textFiles = [], cdbCards = [], luaFiles = [], loadi
     rows.push({
       key: source.key, name: source.name, theme: source.theme, id: effectiveId || null,
       source: source.fileName, cdb: selected?.origin || null, lua: script?.origin || null,
+      // 런타임 로그의 줄번호와 같은 버전 Lua를 근거로 5줄 내외의 코드 맥락을 볼 수 있게 합니다.
+      // 실제 엔진 설치본과의 버전 일치는 실전 기록에서 별도로 확인합니다.
+      luaSource: script?.text?.slice(0,250000) || null,
       cdbType: selected?.type ?? null, sourceVersion: source.version || null,
       effectImplementation,
       issues: problems, description: source.description, cdbDescription: selected?.desc || '',
