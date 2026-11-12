@@ -137,7 +137,7 @@ test('편집창·위험 카드 UI가 자료실 및 기존 보고서와 연결되
   'deck-combo-close','deck-combo-add','deck-combo-recipe-list','deck-combo-editor-content']){
   assert.match(html,new RegExp('id="'+id+'"'));
  }
- assert.match(html,/V0\.8\.2/);
+ assert.match(html,/V0\.8\.3/);
  assert.match(main,/comboResearchMarkdown/);
  assert.match(main,/riskIds/);
  assert.match(main,/comboUI\.sync\(\)/);
