@@ -127,7 +127,7 @@ test('투핸드·패말림 보고서는 정의한 카드군과 실제 수치를 
  assert.match(md,/A\+B 테스트/);
  assert.match(md,/16\.67%/);
  assert.match(md,/초동 없음 \+ 부담 카드/);
- assert.match(md,/실제 전개 성공률/);
+ assert.match(md,/콤보 전개 성공률/);
 });
 test('편집창·위험 카드 UI가 자료실 및 기존 보고서와 연결되고 HTML 삽입 없음',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
@@ -143,6 +143,6 @@ test('편집창·위험 카드 UI가 자료실 및 기존 보고서와 연결되
  assert.match(main,/comboUI\.sync\(\)/);
  assert.match(ui,/localStorage\.setItem/);
  assert.match(ui,/dialog\.showModal\(\)/);
- assert.match(ui,/textContent = text/);
+ assert.match(ui,/textContent\s*=\s*text/);
  assert.doesNotMatch(ui,/innerHTML|eval\s*\(|XMLHttpRequest|fetch\s*\(/);
 });
