@@ -1,0 +1,94 @@
+/* V0.8.1 — 패말림 분석과 넓은 투핸드 조합 편집기. */
+.deck-risk-research,.deck-combo-research{margin-top:20px;padding-top:17px;border-top:1px solid #363b52}
+.deck-risk-research h3,.deck-combo-research h3{font-size:15px;color:#e9e1ff;margin:0;line-height:1.5}
+.deck-risk-card{background:#26232d;border-color:#524657}
+.deck-risk-card strong{font-size:21px}
+.deck-combo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.deck-combo-head button,.deck-combo-chooser-head button,.deck-combo-delete{
+ border:1px solid #685580;border-radius:7px;background:#332948;color:#ecdffc;
+ font-weight:700;padding:7px 11px;font-size:11px;cursor:pointer
+}
+.deck-combo-head button:hover:not(:disabled),.deck-combo-chooser-head button:hover:not(:disabled),.deck-combo-delete:hover{background:#514064}
+.deck-combo-head button:disabled,.deck-combo-chooser-head button:disabled{opacity:.5;cursor:not-allowed}
+.deck-combo-union{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ background:#282337;border:1px solid #5f4d79;border-radius:9px;padding:11px 14px}
+.deck-combo-union span{font-size:12px;color:#d1c5e7}
+.deck-combo-union strong{font-size:21px;color:#e4d6ff;margin-left:auto;white-space:nowrap}
+.deck-combo-union small{width:100%;font-size:10px;color:#a7a0b9}
+.deck-combo-result{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ border-bottom:1px solid #34384e;padding:9px 12px;font-size:12px;color:#d4d8e5}
+.deck-combo-result span{overflow-wrap:anywhere}
+.deck-combo-result strong{color:#ccb6f0;white-space:nowrap}
+.deck-combo-empty{padding:14px 8px;color:#a9b4cc;font-size:12px;line-height:1.85}
+.deck-combo-note{font-size:11px;color:#98a4ba;line-height:1.7;margin:12px 0}
+.deck-tag-choice{gap:7px}
+.deck-tag-choice label{gap:3px}
+dialog.deck-combo-dialog{position:fixed;margin:auto;width:min(1320px,calc(100vw - 40px));height:min(90vh,920px);
+ max-height:none;max-width:none;background:#101522;color:#edf0fb;border:1px solid #71608d;
+ border-radius:14px;box-shadow:0 25px 110px #000c;padding:0;overflow:hidden;
+ grid-template-rows:auto minmax(0,1fr) auto}
+dialog.deck-combo-dialog[open]{display:grid}
+dialog.deck-combo-dialog::backdrop{background:#050611dc;backdrop-filter:blur(4px)}
+.deck-combo-modal-header{background:#1c1c2d;padding:20px 25px;border-bottom:1px solid #414056;
+ display:flex;align-items:start;justify-content:space-between;gap:15px}
+.deck-combo-modal-header h2{margin:4px 0 7px;font-size:23px;color:#eee6ff}
+.deck-combo-modal-header p:not(.eyebrow){margin:0;color:#aebad0;font-size:12px;line-height:1.7}
+#deck-combo-close{cursor:pointer;border-radius:7px;padding:9px 14px;white-space:nowrap;
+ border:1px solid #726394;background:#3c3154;color:#f1e7ff;font-size:12px}
+#deck-combo-close:hover{background:#5c4a79}
+.deck-combo-modal-body{min-height:0;display:grid;grid-template-columns:27% minmax(0,1fr)}
+.deck-combo-chooser{overflow-y:auto;background:#171b2b;border-right:1px solid #3b3f54;padding:18px}
+.deck-combo-chooser-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:17px}
+.deck-combo-chooser-head strong{font-size:13px;color:#d7caee}
+.deck-combo-recipe{display:block;border:1px solid #3f445b;width:100%;text-align:left;background:#202538;
+ border-radius:7px;padding:12px;margin:8px 0;cursor:pointer;color:#cbd3e7;font-size:13px;overflow-wrap:anywhere}
+.deck-combo-recipe.active{border-color:#ae8de6;background:#3b3054;color:#f8edff}
+.deck-combo-tip{border-top:1px solid #383e51;margin-top:22px;padding-top:14px;
+ color:#a9b1c7;font-size:12px;line-height:1.9}
+.deck-combo-editor{min-width:0;min-height:0;overflow-y:auto;padding:24px clamp(17px,4vw,54px) 40px;scrollbar-color:#62607d transparent}
+.deck-combo-editor-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.deck-combo-editor-head h3{font-size:19px;color:#ede6fc;margin:0}
+.deck-combo-name{display:grid;gap:8px;margin:18px 0}
+.deck-combo-name span{font-size:12px;color:#b8a9df;font-weight:800}
+.deck-combo-name input{width:100%;padding:11px 14px;border:1px solid #656080;background:#202538;
+ border-radius:7px;color:#f0eafb;font-size:15px}
+.deck-combo-name input:focus-visible{outline:2px solid #aa8ce4}
+.deck-combo-editor-hint{color:#b8bfd2;font-size:13px;line-height:1.9;margin:15px 0}
+.deck-combo-group-header,.deck-combo-group-row{display:grid;grid-template-columns:minmax(0,1fr) 75px 75px;gap:12px;align-items:center}
+.deck-combo-group-header{background:#29273a;padding:10px 15px;border-radius:7px;font-size:12px;color:#decafa}
+.deck-combo-group-header strong:not(:first-child){text-align:center}
+.deck-combo-group-list{border:1px solid #383c54;border-radius:7px;overflow:hidden;margin:9px 0}
+.deck-combo-group-row{border-bottom:1px solid #30384b;padding:10px 15px;background:#171e2c}
+.deck-combo-group-row:last-child{border-bottom:0}
+.deck-combo-group-name{min-width:0;font-size:13px;color:#e4e8f2;overflow-wrap:anywhere}
+.deck-combo-group-name small{display:block;font-size:10px;color:#8693a9;margin-top:4px}
+.deck-combo-check{display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;font-size:11px;color:#d0c2ee}
+.deck-combo-check input{accent-color:#b39ae9;width:17px;height:17px}
+.deck-combo-edit-result{border:1px solid #6b5b91;background:#322946;padding:18px;border-radius:9px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+.deck-combo-edit-result span{font-size:13px;color:#c8b8ed}
+.deck-combo-edit-result strong{font-size:24px;color:#e8d9ff;white-space:nowrap}
+.deck-combo-modal-footer{border-top:1px solid #3a3e50;background:#1c2130;padding:10px 20px;
+ display:flex;justify-content:space-between;gap:15px;align-items:center;color:#aebad0;font-size:11px;line-height:1.7}
+@media(max-width:900px){
+ .deck-tag-choice{flex-wrap:wrap;justify-content:flex-end}
+ .deck-combo-modal-body{grid-template-columns:32% minmax(0,1fr)}
+ .deck-combo-editor{padding:18px}
+ .deck-combo-group-header,.deck-combo-group-row{grid-template-columns:minmax(0,1fr) 55px 55px;gap:6px}
+}
+@media(max-width:710px){
+ dialog.deck-combo-dialog{width:calc(100vw - 12px);height:calc(100dvh - 24px)}
+ .deck-combo-modal-header{padding:12px}
+ .deck-combo-modal-header h2{font-size:18px}
+ .deck-combo-modal-header p:not(.eyebrow){font-size:11px}
+ .deck-combo-modal-body{display:flex;flex-direction:column}
+ .deck-combo-chooser{flex:0 0 auto;max-height:160px;border-right:0;border-bottom:1px solid #414355;padding:10px 14px}
+ .deck-combo-chooser-head{margin-bottom:7px}
+ .deck-combo-recipe{display:inline-block;width:auto;max-width:185px;margin:3px;padding:8px}
+ .deck-combo-tip{display:none}
+ .deck-combo-editor{flex:1;padding:12px}
+ .deck-combo-group-header,.deck-combo-group-row{grid-template-columns:minmax(0,1fr) 55px 55px;padding:9px}
+ .deck-combo-group-name{font-size:11px}
+ .deck-combo-check span{font-size:10px}
+ .deck-combo-modal-footer{padding:7px 12px;font-size:10px}
+ .deck-combo-modal-footer span:last-child{display:none}
+}
