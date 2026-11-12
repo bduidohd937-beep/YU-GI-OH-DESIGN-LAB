@@ -4,6 +4,8 @@ import {createDeckComboUI} from './deck-combos-ui.js';
 import {comboResearchMarkdown} from './deck-combos.js';
 import {createDeckScenarioUI} from './deck-scenarios-ui.js';
 import {scenarioReportMarkdown} from './deck-scenarios.js';
+import {createRealDeckEditorUI} from './deck-real-editor-ui.js';
+import {realDeckReportMarkdown} from './deck-real-editor.js';
 
 const $=id=>document.getElementById(id);
 const make=(tag,cls='',text)=>{
@@ -23,7 +25,14 @@ const scenarioUI=createDeckScenarioUI({
   getDeck:current,getAnalysis:currentAnalysis,getHandSize:()=>handSize,
   getSelection:()=>selection(current()),getRecipes:()=>comboUI.getRecipes()
 });
-$('deck-combo-dialog').addEventListener('close',()=>scenarioUI.sync());
+const realUI=createRealDeckEditorUI({
+  getDeck:current,getCatalog:()=>cdbCards,getAnalysis:currentAnalysis,
+  getHandSize:()=>handSize,getSelection:()=>selection(current()),
+  getRecipes:()=>comboUI.getRecipes()
+});
+$('deck-combo-dialog').addEventListener('close',()=>{
+  scenarioUI.sync();realUI.sync();
+});
 try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');
   if(saved&&typeof saved==='object'&&!Array.isArray(saved))tags=saved;
 }catch{/* storage blocked or malformed: temporary selection */}
@@ -111,6 +120,7 @@ function renderTags(analysis){
         renderProb(analysis);
         comboUI.sync();
         scenarioUI.sync();
+        realUI.sync();
       });
       holder.append(checkbox,make('span','',label));
       controls.append(holder);
@@ -187,6 +197,7 @@ function render(){
     $('deck-match-count').textContent='미분석';
     comboUI.sync();
     scenarioUI.sync();
+    realUI.sync();
     return;
   }
   selectedKey=currentDeck.key;
@@ -196,7 +207,7 @@ function render(){
     '종 · CDB 미확인 '+analysis.unresolved+'장';
   $('deck-export').disabled=false;
   renderSummary(analysis);renderZones(analysis);renderTags(analysis);renderProb(analysis);
-  comboUI.sync();scenarioUI.sync();renderWarnings(analysis);
+  comboUI.sync();scenarioUI.sync();realUI.sync();renderWarnings(analysis);
 }
 const DECK_LIMIT=1000000;
 async function extractDecks(files){
@@ -252,13 +263,13 @@ $('deck-select').addEventListener('change',event=>{selectedKey=event.target.valu
 $('deck-hand-size').addEventListener('change',event=>{
   handSize=Number(event.target.value)===6?6:5;
   const a=currentAnalysis();
-  if(a){renderProb(a);comboUI.sync();scenarioUI.sync();}
+  if(a){renderProb(a);comboUI.sync();scenarioUI.sync();realUI.sync();}
 });
 $('deck-reset-tags').addEventListener('click',()=>{
   const deck=current();if(!deck)return;
   delete tags[deck.key];saveTags();
   comboUI.clear();
-  const analysis=currentAnalysis();renderTags(analysis);renderProb(analysis);comboUI.sync();scenarioUI.sync();
+  const analysis=currentAnalysis();renderTags(analysis);renderProb(analysis);comboUI.sync();scenarioUI.sync();realUI.sync();
 });
 $('deck-export').addEventListener('click',()=>{
   const a=currentAnalysis();if(!a)return;
@@ -267,11 +278,14 @@ $('deck-export').addEventListener('click',()=>{
     comboResearchMarkdown(a.deck,a,{
       ...selectionValues,handSize,recipes:comboUI.getRecipes()
     })+'\n---\n\n'+
-    scenarioReportMarkdown(a.deck,a,scenarioUI.getOptions());
+    scenarioReportMarkdown(a.deck,a,scenarioUI.getOptions())+'\n---\n\n'+
+    realDeckReportMarkdown(realUI.getResult(),{
+      ...selectionValues,handSize,recipes:comboUI.getRecipes()
+    });
   const blob=new Blob([txt],{type:'text/markdown;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const link=make('a');link.href=url;
-  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.2.md';
+  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.3.md';
   document.body.append(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2500);
 });
