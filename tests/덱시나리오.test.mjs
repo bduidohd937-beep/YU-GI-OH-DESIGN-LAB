@@ -134,6 +134,21 @@ test('투핸드 후보의 실제 물리적 두 장 조건과 가상 덱 시뮬�
   assert.ok(cmp.scenario.combo<cmp.baseline.combo);
 });
 
+test('초동 0장에서도 부담 카드 확률은 그대로 살아 복합 위험에 정확히 반영',()=>{
+  const cmp=compareScenario(d,{...opts,targetSize:40,copyOverrides:{[starter]:0}});
+  assert.equal(cmp.valid,true);
+  assert.equal(cmp.scenario.noStarter,1);
+  assert.ok(Math.abs(cmp.scenario.stranded-cmp.scenario.risk)<1e-12);
+});
+
+test('원본에 없는 카드 ID로 만든 레시피는 가상 덱에 갑자기 생기지 않음',()=>{
+  const x=compareScenario(d,{
+    targetSize:50,handSize:5,
+    recipes:[{id:'fake',name:'불명 카드',groupA:['888888888'],groupB:[starter]}]
+  });
+  assert.equal(x.scenario.combo,null);
+});
+
 test('보고서는 원본·가상 장수·변화율·명시적 가정과 표를 모두 포함',()=>{
   const md=scenarioReportMarkdown(d,analyzeDeck(d),opts);
   assert.match(md,/원본: 천망성역_40장\.ydk · 메인 40장/);
