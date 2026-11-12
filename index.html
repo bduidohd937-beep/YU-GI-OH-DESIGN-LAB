@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./src/import-notices.css">
   <link rel="stylesheet" href="./src/test-recorder.css">
   <link rel="stylesheet" href="./src/failure-triage.css">
+  <link rel="stylesheet" href="./src/deck-lab.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -25,6 +26,7 @@
   <script type="module" src="./src/layout.js"></script>
   <script type="module" src="./src/storage-ui.js"></script>
   <script type="module" src="./src/audit-split.js"></script>
+  <script type="module" src="./src/deck-lab-ui.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -33,7 +35,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.7.4</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.8</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -42,7 +44,7 @@
           <span>◇</span> 원문·코드 검수 <span class="nav-end">02</span>
         </button>
         <button type="button" class="nav-link" data-workspace-target="deck" aria-controls="view-deck">
-          <span>♧</span> 덱 연구소 <span class="nav-end">준비 중</span>
+          <span>♧</span> 덱 연구소 <span class="nav-end">03</span>
         </button>
         <div class="nav-link disabled" aria-disabled="true"><span>◈</span> 자동 시험실 <span class="nav-end">예정</span></div>
       </nav>
@@ -62,13 +64,13 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.7.4</span></div>
+          <span class="build-tag">ALPHA 0.8</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
         <button type="button" role="tab" id="tab-library" class="workspace-tab active" data-workspace-target="library" aria-controls="view-library" aria-selected="true">▦ <span>카드 자료실</span></button>
         <button type="button" role="tab" id="tab-audit" class="workspace-tab" data-workspace-target="audit" aria-controls="view-audit" aria-selected="false" tabindex="-1">◇ <span>교차 검수</span></button>
-        <button type="button" role="tab" id="tab-deck" class="workspace-tab" data-workspace-target="deck" aria-controls="view-deck" aria-selected="false" tabindex="-1">♧ <span>덱 연구소</span><small>예정</small></button>
+        <button type="button" role="tab" id="tab-deck" class="workspace-tab" data-workspace-target="deck" aria-controls="view-deck" aria-selected="false" tabindex="-1">♧ <span>덱 연구소</span></button>
         <span class="tabs-context">테마 설계 · 원문 관리 · 정적 검수</span>
       </nav>
 
@@ -199,16 +201,53 @@
       </section>
 
       <section class="workspace-view" id="view-deck" role="tabpanel" aria-labelledby="tab-deck" hidden>
-        <div class="coming-soon">
-          <div class="coming-icon">♧</div>
-          <p class="eyebrow">PLANNED MODULE</p>
-          <h1>덱 연구소</h1>
-          <p>초동률·전개 루트·패말림 위험을 분석하는 기능을 준비 중입니다. 아직 실전 덱 성능을 자동 평가하지는 않습니다.</p>
-          <button type="button" class="secondary-button" data-workspace-target="library">카드 자료실로 돌아가기</button>
+        <div class="view-heading deck-heading">
+          <div>
+            <p class="eyebrow">DECK RESEARCH / V0.8</p>
+            <h1>덱 연구소 <span>YDK 구성 · CDB 매칭 · 시작 패 조합 확률</span></h1>
+          </div>
+          <div class="view-actions">
+            <label for="deck-import" class="primary-button">＋ YDK 덱 추가</label>
+            <button id="deck-export" type="button" class="secondary-button" disabled>덱 분석 보고서 ↓</button>
+          </div>
+          <input id="deck-import" type="file" accept=".ydk,.zip" multiple hidden>
         </div>
+        <div id="deck-message" class="deck-message" role="status" aria-live="polite">브라우저 보관함의 YDK 파일을 불러오는 중입니다.</div>
+        <section class="deck-workspace">
+          <header class="deck-toolbar">
+            <label for="deck-select">분석할 덱</label>
+            <select id="deck-select" aria-label="분석할 덱 선택"><option value="">등록된 덱 없음</option></select>
+            <span id="deck-metadata" class="deck-metadata">CDB에 연결된 카드만 이름·타입을 표시합니다.</span>
+          </header>
+          <div id="deck-summary" class="deck-summary" aria-label="덱 구성 요약"></div>
+          <div class="deck-two-pane">
+            <section class="deck-zone-pane" aria-label="메인·엑스트라·사이드 덱 목록">
+              <div class="deck-pane-heading">
+                <h2>카드 구성</h2>
+                <span id="deck-match-count">미분석</span>
+              </div>
+              <div id="deck-zones" class="deck-zones"></div>
+            </section>
+            <section class="deck-prob-pane" aria-label="초동·연장 카드 선택과 시작 패 분석">
+              <h2>초동 확률 연구</h2>
+              <p class="deck-help">초동·연장 카드를 직접 지정하면 실제 메인 덱 장수에 맞춰 패 조합 확률을 계산합니다. 카드명만으로 초동 여부를 자동 추측하지 않습니다.</p>
+              <div class="deck-hand-row">
+                <label for="deck-hand-size">시작 패</label>
+                <select id="deck-hand-size"><option value="5">선공 5장</option><option value="6">6장 가정</option></select>
+                <button id="deck-reset-tags" type="button">선택 초기화</button>
+              </div>
+              <div class="deck-prob-metrics" id="deck-prob-metrics"></div>
+              <div class="deck-prob-legend"><span>초동</span><span>연장</span><span>중복 지정 가능</span></div>
+              <div class="deck-tag-head"><b>메인 덱 카드</b><span>초동 / 연장 지정</span></div>
+              <div id="deck-opener-list" class="deck-opener-list"></div>
+              <p class="deck-disclaimer">이 결과는 지정 카드가 패에 들어올 **수학적 확률**입니다. 효과 발동, 실제 전개 성공, 패트랩 관통, 금제·덱 강도는 검증하지 않습니다.</p>
+            </section>
+          </div>
+          <div id="deck-warnings" class="deck-warnings" aria-label="덱 구성 확인 항목"></div>
+        </section>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.7.4 실패 원인 추적·수정안·재시험 관리 / 자동 듀얼 미실행 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8 YDK 덱 구성·시작 패 조합 연구 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
 
