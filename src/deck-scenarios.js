@@ -1,7 +1,7 @@
 // V0.8.2 — 가상 덱 장수/핵심 카드 매수 변경에 따른 시작 패 확률 비교.
 // 원본 YDK 수정/실제 전개 검증/덱 성능 보증을 하지 않습니다.
 import {probabilityAtLeast} from './deck-analysis.js';
-import {analyzeComboRecipes,cleanComboRecipes,analyzeHandRisks} from './deck-combos.js';
+import {analyzeComboRecipes,cleanComboRecipes} from './deck-combos.js';
 
 export const SCENARIO_MIN=40;
 export const SCENARIO_MAX=60;
@@ -77,27 +77,31 @@ export function scenarioMetrics(deck,{starterIds=[],riskIds=[],recipes=[],handSi
   const starterCount=main.filter(id=>starters.includes(id)).length;
   const riskCount=main.filter(id=>risks.includes(id)).length;
   const starterSet=starters.length>0, riskSet=risks.length>0;
-  const rawRisk=analyzeHandRisks(deck,{starterIds:starters,riskIds:risks,handSize});
+  const unionCount=main.filter(id=>starters.includes(id)||risks.includes(id)).length;
   const combo=analyzeComboRecipes(deck,recipes,handSize);
-  const definedRecipes=cleanComboRecipes({zones:{main:unique([...main,...starters,...risks,
-    ...(recipes||[]).flatMap(r=>[...(r.groupA||[]),...(r.groupB||[])])])}},recipes)
-    .some(r=>r.groupA.length&&r.groupB.length);
+  // 레시피는 compareScenario에서 원본 YDK에 실제 존재하는 카드만 남깁니다.
+  const definedRecipes=(Array.isArray(recipes)?recipes:[])
+    .some(r=>Array.isArray(r.groupA)&&r.groupA.length&&Array.isArray(r.groupB)&&r.groupB.length);
+  const noStarter=starterSet?probabilityAtLeast(n,n-starterCount,handSize,handSize):null;
+  const noStarterNoRisk=starterSet&&riskSet?
+    probabilityAtLeast(n,n-unionCount,handSize,handSize):null;
   return {
     size:n,handSize,
     starter:starterSet?probabilityAtLeast(n,starterCount,handSize,1):null,
     combo:definedRecipes?(combo.anyProbability??0):null,
-    noStarter:starterSet?probabilityAtLeast(n,n-starterCount,handSize,handSize):null,
+    noStarter,
     risk:riskSet?probabilityAtLeast(n,riskCount,handSize,1):null,
-    stranded:starterSet&&riskSet?(rawRisk.noStarterAndRisk??0):null,
+    stranded:starterSet&&riskSet?Math.max(0,(noStarter??0)-(noStarterNoRisk??0)):null,
     starterCopies:starterCount,riskCopies:riskCount
   };
 }
 export function compareScenario(base,options={}){
-  const config=sanitizeScenario(base,options);
-  const baseline=scenarioMetrics(base,options);
-  const built=buildHypotheticalDeck(base,{...options,...config});
+  const trusted={...options,recipes:cleanComboRecipes(base,options.recipes)};
+  const config=sanitizeScenario(base,trusted);
+  const baseline=scenarioMetrics(base,trusted);
+  const built=buildHypotheticalDeck(base,{...trusted,...config});
   if(!built.valid)return {valid:false,reason:built.reason,config,baseline,scenario:null,deltas:null};
-  const scenario=scenarioMetrics(built.deck,options);
+  const scenario=scenarioMetrics(built.deck,trusted);
   const deltas={};
   for(const key of Object.keys(SCENARIO_OBJECTIVES)){
     const left=baseline[key],right=scenario[key];
@@ -125,7 +129,7 @@ export function compareDeckSizes(base,options={}){
   });
   return {
     rows,objective,best:eligible[0]||null,
-    baseline:scenarioMetrics(base,options),
+    baseline:scenarioMetrics(base,{...options,recipes:cleanComboRecipes(base,options.recipes)}),
     note:'비지정 카드 자리는 효과·매수 조합이 알려지지 않은 가상 중립 슬롯입니다. 선택 카드 매수만 가정대로 고정합니다. 단일 확률 지표가 높다는 이유로 실제 최적 덱이 되는 것은 아닙니다.'
   };
 }
