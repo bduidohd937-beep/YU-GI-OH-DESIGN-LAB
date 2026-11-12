@@ -86,7 +86,7 @@ test('연장 겹침을 포함배제로 계산하고 적어도 2장 확률을 따
  assert.ok(analysis.atLeastTwo<analysis.atLeastOne);
  const same=analyzeOpeners(d,{starterIds:['990470100'],extenderIds:['990470100'],handSize:5});
  assert.equal(same.overlap,3);
- assert.ok(Math.abs(same.starterPlusExtender-same.atLeastOne)<1e-10);
+ assert.ok(Math.abs(same.starterPlusExtender-same.atLeastTwo)<1e-10); // 같은 카드 1장이 2장 콤보가 될 수 없음
 });
 test('5장과 6장 시작 패의 차이를 정확히 반영',()=>{
  const d=parseYdk(sample);
