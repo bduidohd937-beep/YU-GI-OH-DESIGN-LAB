@@ -128,11 +128,10 @@ test('부담 카드만 지정한 경우 부담 카드 확률이 낮은 장수를
 test('투핸드 후보의 실제 물리적 두 장 조건과 가상 덱 시뮬레이션이 일치',()=>{
   const cmp=compareScenario(d,{...opts,targetSize:40,
     copyOverrides:{[starter]:1,[extender]:1}});
-  assert.ok(Math.abs(cmp.scenario.combo-(5*4/(40*39))*1) > -1); // 유효한 값 및 실제 두 장 검증은 아래 직접 조합으로
-  const p=cmp.scenario.combo;
-  const expected=(2*1*1*35*34*33)/(40*39*38*37*36/120); // P는 별도 정확식과 비교
-  assert.equal(typeof p,'number');
-  assert.ok(p>0&&p<1);
+  // 한 종류 A 1장, B 1장을 동시에 첫 5장에 포함할 확률 = 5×4/(40×39)
+  const expected=5*4/(40*39);
+  assert.ok(Math.abs(cmp.scenario.combo-expected)<1e-12);
+  assert.ok(cmp.scenario.combo<cmp.baseline.combo);
 });
 
 test('보고서는 원본·가상 장수·변화율·명시적 가정과 표를 모두 포함',()=>{
