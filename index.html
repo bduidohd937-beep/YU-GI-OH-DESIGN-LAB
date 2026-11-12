@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="./src/deck-lab.css">
   <link rel="stylesheet" href="./src/deck-combos.css">
   <link rel="stylesheet" href="./src/deck-scenarios.css">
+  <link rel="stylesheet" href="./src/deck-real-editor.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -37,7 +38,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.8.2</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.8.3</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -66,7 +67,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.8.2</span></div>
+          <span class="build-tag">ALPHA 0.8.3</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -205,8 +206,8 @@
       <section class="workspace-view" id="view-deck" role="tabpanel" aria-labelledby="tab-deck" hidden>
         <div class="view-heading deck-heading">
           <div>
-            <p class="eyebrow">DECK RESEARCH / V0.8.2</p>
-            <h1>덱 연구소 <span>원핸드 · 투핸드 · 덱 장수 시나리오 비교</span></h1>
+            <p class="eyebrow">DECK RESEARCH / V0.8.3</p>
+            <h1>덱 연구소 <span>원핸드 · 투핸드 · 실제 카드 교체·증감 비교</span></h1>
           </div>
           <div class="view-actions">
             <label for="deck-import" class="primary-button">＋ YDK 덱 추가</label>
@@ -258,6 +259,13 @@
                 </div>
                 <div id="deck-scenario-inline" class="deck-scenario-inline">덱을 선택하면 가상 확률 비교를 시작할 수 있습니다.</div>
               </section>
+              <section class="deck-real-research" aria-label="실제 카드 증감 덱 비교">
+                <div class="deck-real-research-head">
+                  <h3>실제 카드 증감 실험실</h3>
+                  <button id="deck-real-open" type="button" disabled>카드 교체·덱 만들기 ↗</button>
+                </div>
+                <div id="deck-real-inline" class="deck-real-inline">YDK 원본은 보존하고 실제 카드 ID만 수정합니다.</div>
+              </section>
               <div class="deck-prob-legend"><span>초동</span><span>연장</span><span>부담 카드</span></div>
               <div class="deck-tag-head"><b>메인 덱 카드</b><span>초동 / 연장 / 부담 지정</span></div>
               <div id="deck-opener-list" class="deck-opener-list"></div>
@@ -268,9 +276,55 @@
         </section>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8.2 덱 장수·매수 가상 확률 비교 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8.3 CDB 기반 실제 카드 증감·YDK 재구성 / 금제·실전 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
+
+  <dialog id="deck-real-dialog" class="deck-real-dialog" aria-labelledby="deck-real-title">
+    <header class="deck-real-modal-header">
+      <div>
+        <p class="eyebrow">DECK RESEARCH / REAL CARD EDITS</p>
+        <h2 id="deck-real-title">실제 카드 증감 · YDK 비교</h2>
+        <p>원본 YDK는 변경하지 않습니다. 기존 카드 매수를 바꾸거나 등록된 CDB 카드 중 메인 덱에 넣을 카드를 고르세요.</p>
+      </div>
+      <button id="deck-real-close" type="button">✕ 닫기</button>
+    </header>
+    <div class="deck-real-modal-body">
+      <aside class="deck-real-controls" aria-label="실제 카드 선택과 매수 편집">
+        <div class="deck-real-section-title">
+          <h3>현재 메인 덱 카드</h3>
+          <button id="deck-real-reset" type="button">원본으로 초기화</button>
+        </div>
+        <p class="deck-real-tip">각 카드의 목표 매수를 0~3장으로 설정하세요. 0장은 해당 카드 제거를 뜻합니다.</p>
+        <div id="deck-real-current" class="deck-real-current"></div>
+        <section class="deck-real-add-section">
+          <h3>CDB에서 새 카드 추가</h3>
+          <label for="deck-real-search" class="deck-real-search-label">카드명 또는 카드 ID 검색</label>
+          <input id="deck-real-search" type="search" autocomplete="off" placeholder="카드명 · 990470100 등">
+          <div id="deck-real-catalog" class="deck-real-catalog"></div>
+          <p class="deck-real-tip">엑스트라 덱 몬스터·토큰 등은 검색에서 제외됩니다. CDB가 없으면 새 카드를 추가할 수 없습니다.</p>
+        </section>
+      </aside>
+      <section class="deck-real-results" aria-label="원본과 수정 덱 비교 결과">
+        <div id="deck-real-state" class="deck-real-state" role="status"></div>
+        <div id="deck-real-counts" class="deck-real-counts"></div>
+        <h3>변경 카드 목록</h3>
+        <div id="deck-real-diff" class="deck-real-diff"></div>
+        <h3>시작 패 확률 전후 비교</h3>
+        <div id="deck-real-metrics" class="deck-real-metrics"></div>
+        <h3>수정 후 메인 덱 구성</h3>
+        <div id="deck-real-preview" class="deck-real-preview"></div>
+        <p class="deck-real-caveat">이 도구는 카드 ID와 기본 장수·구역만 검사합니다. OCG 금제·카드명 기준 동일 카드 판정·실제 소환/전개 성립은 별도 검증이 필요합니다.</p>
+      </section>
+    </div>
+    <footer class="deck-real-modal-footer">
+      <span id="deck-real-message" role="status" aria-live="polite">변경 내용은 덱별로 브라우저에 보관됩니다.</span>
+      <div class="deck-real-footer-buttons">
+        <button id="deck-real-report" type="button">변경 비교 보고서 ↓</button>
+        <button id="deck-real-ydk" type="button" disabled>수정한 덱 YDK ↓</button>
+      </div>
+    </footer>
+  </dialog>
 
   <dialog id="deck-scenario-dialog" class="deck-scenario-dialog" aria-labelledby="deck-scenario-title">
     <header class="deck-scenario-modal-header">
