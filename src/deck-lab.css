@@ -1,0 +1,67 @@
+/* V0.8 — 덱 연구소: PC 50/50 구조, 메인 목록과 확률을 따로 스크롤 */
+#view-deck .deck-heading{min-height:59px;padding:8px 0 10px}
+#view-deck .deck-workspace{flex:1;min-height:0;border:1px solid #38374d;background:#111520;border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+#view-deck .deck-message{flex:0 0 auto;min-height:27px;font-size:11px;line-height:1.7;color:#afbad0;padding:5px 10px;background:#171a27;border:1px solid #33354c;border-radius:7px;margin-bottom:8px}
+#view-deck .deck-message.is-error{color:#ffb7ac;border-color:#855454}
+#view-deck .deck-toolbar{flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 17px;border-bottom:1px solid #353b50}
+#view-deck .deck-toolbar label{font-size:11px;color:#a2abc0;font-weight:700}
+#deck-select{min-width:235px;max-width:43vw;flex:0 1 330px;background:#242234;border:1px solid #594c79;border-radius:7px;color:#eae4fa;padding:8px 10px;font-size:12px}
+.deck-metadata{color:#a6aec5;font-size:11px;line-height:1.6}
+.deck-summary{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:11px 15px;border-bottom:1px solid #333648}
+.deck-summary-card{border:1px solid #3d4057;border-radius:8px;padding:9px 13px;background:#1a1c2a}
+.deck-summary-card span{color:#9ca6bc;display:block;font-size:10px;margin-bottom:4px}
+.deck-summary-card strong{color:#ded2ff;font-size:21px}
+.deck-summary-card small{color:#8f9bab;font-size:10px;margin-left:6px}
+.deck-two-pane{display:grid;grid-template-columns:minmax(0,48%) minmax(0,52%);min-height:0;flex:1}
+.deck-zone-pane,.deck-prob-pane{min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-color:#555269 transparent}
+.deck-zone-pane{border-right:1px solid #353950;padding:16px}
+.deck-prob-pane{padding:16px clamp(16px,2.4vw,36px) 26px}
+.deck-zone-pane h2,.deck-prob-pane h2{font-size:17px;color:#eee7ff;letter-spacing:-.3px;margin:0}
+.deck-pane-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:15px}
+#deck-match-count{font-size:11px;color:#a99ac8}
+.deck-zone{border:1px solid #34384d;border-radius:9px;margin-bottom:15px;overflow:hidden;background:#151a29}
+.deck-zone h3{margin:0;padding:10px 14px;background:#272439;color:#d4c4f4;font-size:12px}
+.deck-zone-list{display:grid}
+.deck-card-row{display:flex;justify-content:space-between;gap:9px;padding:9px 14px;font-size:12px;line-height:1.65;border-top:1px solid #2d3548;color:#d2d8e6}
+.deck-card-row .deck-qty{flex:0 0 30px;font-weight:800;color:#beabf3}
+.deck-card-row .deck-card-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.deck-card-row .deck-card-id{color:#8490a9;font-size:10px;white-space:nowrap}
+.deck-card-row.unknown{color:#9ba7ba}
+.deck-empty{font-size:13px;color:#929db3;line-height:1.9;padding:26px 18px}
+.deck-help{margin:11px 0 13px;color:#aeb8cd;font-size:12px;line-height:1.8}
+.deck-hand-row{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.deck-hand-row label{font-size:11px;color:#a5afc1}
+.deck-hand-row select,.deck-hand-row button{border:1px solid #534968;border-radius:6px;padding:7px 9px;background:#242338;color:#dfd6f4;font-size:11px}
+.deck-hand-row button{cursor:pointer;margin-left:auto}
+.deck-hand-row button:hover{background:#342c4c}
+.deck-prob-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.deck-prob-card{background:#1e2432;border:1px solid #46465f;padding:13px 16px;border-radius:9px}
+.deck-prob-card span{font-size:11px;color:#afb7ca;display:block;line-height:1.55}
+.deck-prob-card strong{font-size:24px;color:#dccfff;display:block;margin-top:5px;letter-spacing:-.4px}
+.deck-prob-card small{font-size:11px;color:#8e97ac;display:block;margin-top:3px}
+.deck-prob-legend{display:flex;gap:12px;color:#919cb4;font-size:11px;margin:15px 0}
+.deck-prob-legend span:before{content:'◯ ';color:#b8a3f0}
+.deck-tag-head{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;font-size:11px;color:#adbbd0;background:#222335;border-radius:6px}
+.deck-opener-list{display:grid;max-height:35vh;overflow-y:auto;overscroll-behavior:contain}
+.deck-opener-item{padding:9px 11px;border-bottom:1px solid #30364b;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.deck-opener-item .deck-opener-name{font-size:12px;line-height:1.6;min-width:0;overflow-wrap:anywhere;color:#d6ddec}
+.deck-opener-item .deck-opener-name small{color:#939db4;margin-left:4px}
+.deck-tag-choice{flex:0 0 auto;display:flex;gap:12px;align-items:center}
+.deck-tag-choice label{display:flex;align-items:center;gap:5px;font-size:10px;color:#c8bde7;cursor:pointer}
+.deck-tag-choice input{accent-color:#a58ce0}
+.deck-disclaimer{margin-top:18px;border-top:1px solid #41455c;padding-top:12px;font-size:11px;line-height:1.8;color:#9da8bf}
+.deck-warnings{flex:0 0 auto;max-height:75px;overflow:auto;border-top:1px solid #363a51;background:#181a2a;padding:8px 15px;font-size:11px;line-height:1.75;color:#ccbbb0}
+.deck-warnings[hidden]{display:none}
+.deck-warnings strong{color:#dec5aa}
+.deck-warnings ul{margin:3px 0;padding-left:20px}
+@media (max-width:1000px){.deck-two-pane{grid-template-columns:44% 56%}.deck-prob-pane{padding:12px}.deck-prob-card strong{font-size:20px}}
+@media (max-width:710px){
+ #view-deck .deck-toolbar{padding:10px;gap:7px}
+ #deck-select{max-width:100%;min-width:0;flex:1}
+ .deck-summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:8px}
+ .deck-two-pane{display:flex;flex-direction:column}
+ .deck-zone-pane{max-height:350px;border-right:0;border-bottom:1px solid #353950;padding:12px}
+ .deck-prob-pane{min-height:400px;overflow:visible;padding:15px}
+ .deck-opener-list{max-height:410px}
+ .deck-warnings{max-height:none}
+}
