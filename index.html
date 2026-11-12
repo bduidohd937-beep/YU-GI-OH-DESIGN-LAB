@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="./src/failure-triage.css">
   <link rel="stylesheet" href="./src/deck-lab.css">
   <link rel="stylesheet" href="./src/deck-combos.css">
+  <link rel="stylesheet" href="./src/deck-scenarios.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -36,7 +37,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.8.1</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.8.2</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -65,7 +66,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.8.1</span></div>
+          <span class="build-tag">ALPHA 0.8.2</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -204,8 +205,8 @@
       <section class="workspace-view" id="view-deck" role="tabpanel" aria-labelledby="tab-deck" hidden>
         <div class="view-heading deck-heading">
           <div>
-            <p class="eyebrow">DECK RESEARCH / V0.8.1</p>
-            <h1>덱 연구소 <span>원핸드 · 투핸드 전개 조합 · 부담 카드 분석</span></h1>
+            <p class="eyebrow">DECK RESEARCH / V0.8.2</p>
+            <h1>덱 연구소 <span>원핸드 · 투핸드 · 덱 장수 시나리오 비교</span></h1>
           </div>
           <div class="view-actions">
             <label for="deck-import" class="primary-button">＋ YDK 덱 추가</label>
@@ -250,6 +251,13 @@
                 </div>
                 <div id="deck-combo-summary"></div>
               </section>
+              <section class="deck-scenario-research" aria-label="덱 장수 및 핵심 카드 매수 가상 비교">
+                <div class="deck-scenario-head">
+                  <h3>덱 장수 시뮬레이터</h3>
+                  <button id="deck-scenario-open" type="button" disabled>40~60장 비교 ↗</button>
+                </div>
+                <div id="deck-scenario-inline" class="deck-scenario-inline">덱을 선택하면 가상 확률 비교를 시작할 수 있습니다.</div>
+              </section>
               <div class="deck-prob-legend"><span>초동</span><span>연장</span><span>부담 카드</span></div>
               <div class="deck-tag-head"><b>메인 덱 카드</b><span>초동 / 연장 / 부담 지정</span></div>
               <div id="deck-opener-list" class="deck-opener-list"></div>
@@ -260,9 +268,63 @@
         </section>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8.1 원핸드·투핸드 조합·패말림 위험 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8.2 덱 장수·매수 가상 확률 비교 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
+
+  <dialog id="deck-scenario-dialog" class="deck-scenario-dialog" aria-labelledby="deck-scenario-title">
+    <header class="deck-scenario-modal-header">
+      <div>
+        <p class="eyebrow">DECK RESEARCH / PROBABILITY SCENARIOS</p>
+        <h2 id="deck-scenario-title">덱 장수·핵심 카드 매수 비교</h2>
+        <p>현재 YDK는 변경하지 않습니다. 사용자 지정 핵심 카드만 유지·조정하고 나머지는 효과 없는 가상 중립 슬롯으로 계산합니다.</p>
+      </div>
+      <button id="deck-scenario-close" type="button">✕ 닫기</button>
+    </header>
+    <div class="deck-scenario-modal-body">
+      <aside class="deck-scenario-controls" aria-label="가상 시나리오 설정">
+        <div class="deck-scenario-control-row">
+          <label for="deck-scenario-size">목표 메인 덱 장수</label>
+          <input id="deck-scenario-size" type="number" min="40" max="60" step="1" value="40">
+        </div>
+        <div class="deck-scenario-control-row">
+          <label for="deck-scenario-objective">비교할 확률 지표</label>
+          <select id="deck-scenario-objective">
+            <option value="starter">초동 1장 이상</option>
+            <option value="combo">투핸드 하나 이상</option>
+            <option value="noStarter">초동 없는 패</option>
+            <option value="risk">부담 카드 1장 이상</option>
+            <option value="stranded">초동 없음 + 부담 카드</option>
+          </select>
+        </div>
+        <div class="deck-scenario-copy-head">
+          <h3>핵심 카드 매수 조정</h3>
+          <button id="deck-scenario-reset" type="button">원본 매수 복원</button>
+        </div>
+        <p class="deck-scenario-explainer">초동·연장·부담 카드 또는 투핸드 레시피에 포함된 메인 덱 카드만 표시합니다. 같은 카드 총 매수는 최대 3장까지 가정합니다.</p>
+        <div id="deck-scenario-copies" class="deck-scenario-copies"></div>
+        <div id="deck-scenario-validation" class="deck-scenario-validation" role="status"></div>
+        <button id="deck-scenario-export" type="button" disabled>가상 비교 보고서 ↓</button>
+      </aside>
+      <section class="deck-scenario-results" aria-label="원본과 가상 덱 확률 비교">
+        <div id="deck-scenario-headline" class="deck-scenario-headline"></div>
+        <div id="deck-scenario-metrics" class="deck-scenario-metrics"></div>
+        <div id="deck-scenario-best" class="deck-scenario-best"></div>
+        <h3>40~60장 확률 변화표</h3>
+        <div class="deck-scenario-table-scroll">
+          <table class="deck-scenario-table">
+            <thead><tr><th scope="col">장수</th><th scope="col">가상 확률</th><th scope="col">원본 대비</th><th scope="col">비교</th></tr></thead>
+            <tbody id="deck-scenario-table-body"></tbody>
+          </table>
+        </div>
+        <p class="deck-scenario-legal">지표별 수학적 최상위일 뿐 실제 최적 덱을 추천하거나 카드 효과·금제·패트랩 관통을 검증한 결과가 아닙니다.</p>
+      </section>
+    </div>
+    <footer class="deck-scenario-modal-footer">
+      <span id="deck-scenario-status" role="status">가상 시나리오는 이 브라우저에만 저장됩니다.</span>
+      <span>가상 슬롯은 카드 목록이나 EDOPro 덱에 추가되지 않습니다.</span>
+    </footer>
+  </dialog>
 
   <dialog id="deck-combo-dialog" class="deck-combo-dialog" aria-labelledby="deck-combo-title">
     <header class="deck-combo-modal-header">
