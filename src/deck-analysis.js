@@ -1,3 +1,4 @@
+import {exactTwoCardProbability} from './deck-combos.js';
 // V0.8 — YDK 정적 덱 분석. 실전 전개 성공/승률은 계산하지 않습니다.
 export const DECK_ZONES=Object.freeze({main:'메인',extra:'엑스트라',side:'사이드'});
 export const DEFAULT_HAND=5;
@@ -95,10 +96,8 @@ export function analyzeOpeners(deck,{starterIds=[],extenderIds=[],handSize=5}={}
   const second=main.filter(id=>extenders.has(id)).length;
   const overlap=main.filter(id=>starters.has(id)&&extenders.has(id)).length;
   const union=first+second-overlap;
-  // 포함배제. 겹치는 카드는 스타터와 익스텐더를 동시에 충족함.
-  const total=comb(n,handSize);
-  const starterPlusExtender=total ? Math.max(0,Math.min(1,
-    (total-comb(n-first,handSize)-comb(n-second,handSize)+comb(n-union,handSize))/total)) : null;
+  // V0.8.1: 초동+연장도 실제로 서로 다른 2장을 요구합니다. 같은 카드 1장 중복 계산 금지.
+  const starterPlusExtender=exactTwoCardProbability(deck,[...starters],[...extenders],handSize);
   return {n,handSize,first,second,overlap,union,
     atLeastOne:probabilityAtLeast(n,first,handSize,1),
     atLeastTwo:probabilityAtLeast(n,first,handSize,2),
