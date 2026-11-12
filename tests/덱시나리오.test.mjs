@@ -170,7 +170,7 @@ test('UI 연결: 모달·매수 입력·객관 지표·이중 보고서·브라�
     'deck-scenario-inline','deck-scenario-reset']){
     assert.match(html,new RegExp('id="'+id+'"'));
   }
-  assert.match(html,/V0\.8\.2/);
+  assert.match(html,/V0\.8\.3/);
   assert.match(app,/scenarioUI\.sync\(\)/);
   assert.match(app,/scenarioReportMarkdown/);
   assert.match(ui,/localStorage\.setItem/);
