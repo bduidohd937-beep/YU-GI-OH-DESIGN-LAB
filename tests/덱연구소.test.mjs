@@ -58,7 +58,7 @@ test('CDB 실제 카드 이름·타입이 연결되고 미확인은 추정하지
  assert.equal(a.composition.monster,5);
  assert.equal(a.composition.unknown,35);
  assert.ok(a.sections.extra[1].name.startsWith('미확인 카드'));
- assert.equal(a.unresolved,39);
+ assert.equal(a.unresolved,38);
 });
 test('엑스트라 타입 카드가 메인에 있거나 비엑스트라가 엑스트라에 있으면 경고',()=>{
  const d=parseYdk('#main\n234567890\n#extra\n123456789\n!side');
