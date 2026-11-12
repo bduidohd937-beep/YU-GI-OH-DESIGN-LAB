@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="./src/test-recorder.css">
   <link rel="stylesheet" href="./src/failure-triage.css">
   <link rel="stylesheet" href="./src/deck-lab.css">
+  <link rel="stylesheet" href="./src/deck-combos.css">
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js"></script>
   <script type="module" src="./src/main.js"></script>
@@ -35,7 +36,7 @@
         <span class="brand-icon" aria-hidden="true">✦</span>
         <span><strong>DESIGN LAB</strong><small>YU-GI-OH CUSTOM STUDIO</small></span>
       </a>
-      <div class="side-heading">WORKSPACE <span>V0.8</span></div>
+      <div class="side-heading">WORKSPACE <span>V0.8.1</span></div>
       <nav class="side-nav" aria-label="작업실 이동">
         <button type="button" class="nav-link active" data-workspace-target="library" aria-controls="view-library" aria-current="page">
           <span>▦</span> 카드 자료실 <span class="nav-end">01</span>
@@ -64,7 +65,7 @@
           <button type="button" id="assets-open" class="assets-open" aria-haspopup="dialog">▤ 저장 자료 <strong id="assets-count">0</strong>개</button>
           <label for="assets-input" class="assets-top-add">＋ 추가</label>
           <input id="assets-input" type="file" accept=".zip,.txt,.cdb,.lua,.ydk" multiple hidden>
-          <span class="build-tag">ALPHA 0.8</span></div>
+          <span class="build-tag">ALPHA 0.8.1</span></div>
       </header>
 
       <nav class="workspace-tabs" role="tablist" aria-label="연구 기능 선택">
@@ -203,8 +204,8 @@
       <section class="workspace-view" id="view-deck" role="tabpanel" aria-labelledby="tab-deck" hidden>
         <div class="view-heading deck-heading">
           <div>
-            <p class="eyebrow">DECK RESEARCH / V0.8</p>
-            <h1>덱 연구소 <span>YDK 구성 · CDB 매칭 · 시작 패 조합 확률</span></h1>
+            <p class="eyebrow">DECK RESEARCH / V0.8.1</p>
+            <h1>덱 연구소 <span>원핸드 · 투핸드 전개 조합 · 부담 카드 분석</span></h1>
           </div>
           <div class="view-actions">
             <label for="deck-import" class="primary-button">＋ YDK 덱 추가</label>
@@ -237,19 +238,59 @@
                 <button id="deck-reset-tags" type="button">선택 초기화</button>
               </div>
               <div class="deck-prob-metrics" id="deck-prob-metrics"></div>
-              <div class="deck-prob-legend"><span>초동</span><span>연장</span><span>중복 지정 가능</span></div>
-              <div class="deck-tag-head"><b>메인 덱 카드</b><span>초동 / 연장 지정</span></div>
+              <section class="deck-risk-research" aria-label="패말림 위험 카드 통계">
+                <h3>패말림 위험 · 사용자 지정 기준</h3>
+                <p class="deck-help">덱에서 패에 잡히면 부담되는 카드를 아래에서 직접 지정하세요. 실제 패말림을 자동 판정하지 않습니다.</p>
+                <div id="deck-risk-metrics" class="deck-prob-metrics"></div>
+              </section>
+              <section class="deck-combo-research" aria-label="투핸드 전개 조합 확률">
+                <div class="deck-combo-head">
+                  <h3>투핸드 전개 조합</h3>
+                  <button id="deck-combo-open" type="button" disabled>조합 편집 ↗</button>
+                </div>
+                <div id="deck-combo-summary"></div>
+              </section>
+              <div class="deck-prob-legend"><span>초동</span><span>연장</span><span>부담 카드</span></div>
+              <div class="deck-tag-head"><b>메인 덱 카드</b><span>초동 / 연장 / 부담 지정</span></div>
               <div id="deck-opener-list" class="deck-opener-list"></div>
-              <p class="deck-disclaimer">이 결과는 지정 카드가 패에 들어올 **수학적 확률**입니다. 효과 발동, 실제 전개 성공, 패트랩 관통, 금제·덱 강도는 검증하지 않습니다.</p>
+              <p class="deck-disclaimer">이 결과는 지정 카드가 시작 패에 들어올 **조합 확률**입니다. 사용자가 지정한 전개 가능성·부담 기준을 전제로 하며 실제 발동·전개 성공·승률은 검증하지 않습니다.</p>
             </section>
           </div>
           <div id="deck-warnings" class="deck-warnings" aria-label="덱 구성 확인 항목"></div>
         </section>
       </section>
 
-      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8 YDK 덱 구성·시작 패 조합 연구 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
+      <footer class="footer app-footer">YU-GI-OH DESIGN LAB · V0.8.1 원핸드·투핸드 조합·패말림 위험 / 실제 듀얼·금제 자동 검증 아님 · 원문 분석 ≠ EDOPro 실전 검증</footer>
     </main>
   </div>
+
+  <dialog id="deck-combo-dialog" class="deck-combo-dialog" aria-labelledby="deck-combo-title">
+    <header class="deck-combo-modal-header">
+      <div>
+        <p class="eyebrow">DECK RESEARCH / COMBO DESIGNER</p>
+        <h2 id="deck-combo-title">투핸드 전개 조합 편집</h2>
+        <p>최대 3개의 조합을 구성할 수 있어요. 각 조합은 A군에서 1장, B군에서 1장을 실제로 별도 확보해야 합니다.</p>
+      </div>
+      <button id="deck-combo-close" type="button">✕ 닫기</button>
+    </header>
+    <div class="deck-combo-modal-body">
+      <aside class="deck-combo-chooser" aria-label="등록된 투핸드 레시피">
+        <div class="deck-combo-chooser-head">
+          <strong>전개 레시피</strong>
+          <button id="deck-combo-add" type="button">＋ 조합 추가</button>
+        </div>
+        <div id="deck-combo-recipe-list"></div>
+        <p class="deck-combo-tip">같은 카드가 A군과 B군에 들어가도 시작 패에 그 카드가 1장뿐이면 투핸드 성립으로 보지 않습니다.</p>
+      </aside>
+      <section class="deck-combo-editor" aria-label="투핸드 조합 세부 설정">
+        <div id="deck-combo-editor-content"></div>
+      </section>
+    </div>
+    <footer class="deck-combo-modal-footer">
+      <span id="deck-combo-status" role="status">조합은 현재 브라우저에만 저장됩니다.</span>
+      <span>전개 경로의 실제 가능성과 효과 적법성은 별도 시험해야 합니다.</span>
+    </footer>
+  </dialog>
 
   <dialog id="runtime-dialog" class="runtime-dialog" aria-labelledby="runtime-title" aria-describedby="runtime-explainer">
     <header class="runtime-header">
