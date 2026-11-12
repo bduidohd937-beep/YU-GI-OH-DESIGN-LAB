@@ -4,10 +4,11 @@ import {
 } from './storage.js';
 import { refreshLibrary } from './main.js';
 import { refreshAudit } from './audit-ui.js';
+import { refreshDeck } from './deck-lab-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const dialog = $('assets-dialog');
-const inputs = [$('assets-input'), $('assets-modal-input'), $('file-input'), $('audit-input')];
+const inputs = [$('assets-input'), $('assets-modal-input'), $('file-input'), $('audit-input'), $('deck-import')];
 let busy = false;
 let lastNotice = '';
 
@@ -24,7 +25,7 @@ function notice(text, error = false) {
 }
 async function refreshAll() {
   const files = await assetFiles();
-  const outcomes = await Promise.allSettled([refreshLibrary(files), refreshAudit(files)]);
+  const outcomes = await Promise.allSettled([refreshLibrary(files), refreshAudit(files), refreshDeck(files)]);
   const errors = outcomes.filter((r) => r.status === 'rejected').map((r) => r.reason?.message || String(r.reason));
   if (errors.length) notice('일부 검사 새로고침 실패: ' + errors.join(' / '), true);
 }
@@ -53,7 +54,7 @@ async function draw() {
     if (conflicts.has(row.id)) {
       info.append(make('div', 'assets-conflict', '같은 파일명의 다른 버전 있음 — 검수 기준을 확인하세요'));
     }
-    if (/\.ydk$/i.test(row.name)) info.append(make('div', 'assets-muted', '덱 파일 보관 전용 · 분석 미지원'));
+    if (/\.ydk$/i.test(row.name)) info.append(make('div', 'assets-muted', '덱 연구소에서 구성·초동 확률 분석 지원'));
     const actions = make('div', 'assets-item-actions');
     const download = make('button', 'assets-download', '원본 저장');
     download.type = 'button';
