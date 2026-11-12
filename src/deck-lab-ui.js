@@ -1,5 +1,7 @@
 // V0.8 — 저장된 YDK 덱을 브라우저에서만 분석. CDB는 기존 교차 검수의 읽기 결과를 재사용합니다.
 import {parseYdk,analyzeDeck,analyzeOpeners,deckReportMarkdown,DECK_ZONES} from './deck-analysis.js';
+import {createDeckComboUI} from './deck-combos-ui.js';
+import {comboResearchMarkdown} from './deck-combos.js';
 
 const $=id=>document.getElementById(id);
 const make=(tag,cls='',text)=>{
@@ -11,6 +13,10 @@ const make=(tag,cls='',text)=>{
 const KEY='design-lab:deck-openers:v1';
 let decks=[],selectedKey=null,cdbCards=[],tags={};
 let handSize=5;
+const comboUI=createDeckComboUI({
+  getDeck:current,getAnalysis:currentAnalysis,getHandSize:()=>handSize,
+  getSelection:()=>selection(current())
+});
 try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');
   if(saved&&typeof saved==='object'&&!Array.isArray(saved))tags=saved;
 }catch{/* storage blocked or malformed: temporary selection */}
@@ -38,12 +44,13 @@ function selection(deck){
   const present=new Set(deck.zones.main);
   return {
     starterIds:(Array.isArray(record.starterIds)?record.starterIds:[]).filter(id=>present.has(id)),
-    extenderIds:(Array.isArray(record.extenderIds)?record.extenderIds:[]).filter(id=>present.has(id))
+    extenderIds:(Array.isArray(record.extenderIds)?record.extenderIds:[]).filter(id=>present.has(id)),
+    riskIds:(Array.isArray(record.riskIds)?record.riskIds:[]).filter(id=>present.has(id))
   };
 }
 function setTag(deck,id,type,checked){
   if(!tags[deck.key])tags[deck.key]={starterIds:[],extenderIds:[]};
-  const key=type==='starter'?'starterIds':'extenderIds';
+  const key=type==='starter'?'starterIds':type==='extender'?'extenderIds':'riskIds';
   const next=new Set(tags[deck.key][key]||[]);
   if(checked)next.add(id);else next.delete(id);
   tags[deck.key][key]=[...next];
@@ -63,7 +70,7 @@ function renderProb(analysis){
   for(const [label,value,note] of [
     ['초동 ≥1장',pct(opener.atLeastOne),'시작 패 '+handSize+'장'],
     ['초동 ≥2장',pct(opener.atLeastTwo),'직접 지정 '+opener.first+'장'],
-    ['초동 + 연장',pct(opener.starterPlusExtender),'두 범주 각각 1장 이상'],
+    ['초동 + 연장',pct(opener.starterPlusExtender),'서로 다른 실제 2장'],
     ['지정 카드 총수',String(opener.union)+'장','중복 지정 '+opener.overlap+'장 제외']
   ]){
     const card=make('div','deck-prob-card');
@@ -86,7 +93,8 @@ function renderTags(analysis){
     const controls=make('div','deck-tag-choice');
     for(const [kind,label,ids] of [
       ['starter','초동',selected.starterIds],
-      ['extender','연장',selected.extenderIds]
+      ['extender','연장',selected.extenderIds],
+      ['risk','부담',selected.riskIds]
     ]){
       const holder=make('label');
       const checkbox=make('input');checkbox.type='checkbox';checkbox.checked=ids.includes(row.id);
@@ -94,6 +102,7 @@ function renderTags(analysis){
       checkbox.addEventListener('change',()=>{
         setTag(deck,row.id,kind,checkbox.checked);
         renderProb(analysis);
+        comboUI.sync();
       });
       holder.append(checkbox,make('span','',label));
       controls.append(holder);
@@ -168,6 +177,7 @@ function render(){
     $('deck-metadata').textContent='CDB를 함께 등록하면 카드명을 연결합니다.';
     $('deck-warnings').hidden=true;
     $('deck-match-count').textContent='미분석';
+    comboUI.sync();
     return;
   }
   selectedKey=currentDeck.key;
@@ -176,7 +186,8 @@ function render(){
   $('deck-metadata').textContent='총 '+analysis.deck.total+'장 · 고유 카드 '+analysis.deck.ids.length+
     '종 · CDB 미확인 '+analysis.unresolved+'장';
   $('deck-export').disabled=false;
-  renderSummary(analysis);renderZones(analysis);renderTags(analysis);renderProb(analysis);renderWarnings(analysis);
+  renderSummary(analysis);renderZones(analysis);renderTags(analysis);renderProb(analysis);
+  comboUI.sync();renderWarnings(analysis);
 }
 const DECK_LIMIT=1000000;
 async function extractDecks(files){
@@ -229,20 +240,28 @@ window.addEventListener('designlab:audit-data',event=>{
   render();
 });
 $('deck-select').addEventListener('change',event=>{selectedKey=event.target.value;render();});
-$('deck-hand-size').addEventListener('change',event=>{handSize=Number(event.target.value)===6?6:5;const a=currentAnalysis();if(a)renderProb(a);});
+$('deck-hand-size').addEventListener('change',event=>{
+  handSize=Number(event.target.value)===6?6:5;
+  const a=currentAnalysis();
+  if(a){renderProb(a);comboUI.sync();}
+});
 $('deck-reset-tags').addEventListener('click',()=>{
   const deck=current();if(!deck)return;
   delete tags[deck.key];saveTags();
-  const analysis=currentAnalysis();renderTags(analysis);renderProb(analysis);
+  comboUI.clear();
+  const analysis=currentAnalysis();renderTags(analysis);renderProb(analysis);comboUI.sync();
 });
 $('deck-export').addEventListener('click',()=>{
   const a=currentAnalysis();if(!a)return;
   const deck=current(),selectionValues=selection(deck);
-  const txt=deckReportMarkdown(a,analyzeOpeners(a.deck,{...selectionValues,handSize}));
+  const txt=deckReportMarkdown(a,analyzeOpeners(a.deck,{...selectionValues,handSize}))+'\n---\n\n'+
+    comboResearchMarkdown(a.deck,a,{
+      ...selectionValues,handSize,recipes:comboUI.getRecipes()
+    });
   const blob=new Blob([txt],{type:'text/markdown;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const link=make('a');link.href=url;
-  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.md';
+  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.1.md';
   document.body.append(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2500);
 });
