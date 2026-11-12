@@ -352,12 +352,17 @@ export async function refreshAudit(files) {
     if (!relevant.length) {
       result = null;
       selectedKey = null;
+      window.dispatchEvent(new CustomEvent('designlab:audit-data',{detail:{cdbCards:[]}}));
       render();
       notify('아직 등록된 검수 자료가 없습니다. 원문 또는 CDB·Lua 파일을 추가해 주세요.');
       return;
     }
     const data = await readImportFiles(relevant);
     result = buildAudit(data);
+    // CDB 결과는 파일 업로드 없이 같은 브라우저의 덱 연구소에서 이름/카드 타입을 조회하는 데만 사용합니다.
+    window.dispatchEvent(new CustomEvent('designlab:audit-data', {
+      detail:{cdbCards:data.cdbCards}
+    }));
     if (!result.cards.some((card) => card.key === selectedKey)) selectedKey = result.cards[0]?.key || null;
     render();
     const diagnostics = categorizeImportNotices(result);
