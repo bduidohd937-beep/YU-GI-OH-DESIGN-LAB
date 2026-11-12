@@ -1,6 +1,7 @@
 // V0.8.3 — YDK 원본을 건드리지 않는 브라우저 내부 실제 카드 편집.
-import {REAL_EDITOR_KEY,eligibleCatalog,cleanRealOverrides,compareRealDeck,
-  serializeEditedYdk,realDeckReportMarkdown} from './deck-real-editor.js';
+import {REAL_EDITOR_KEY,eligibleCatalog,conflictingCdbIds,parseRealCopyCount,
+  cleanRealOverrides,compareRealDeck,serializeEditedYdk,
+  realDeckReportMarkdown} from './deck-real-editor.js';
 const $=id=>document.getElementById(id);
 const el=(tag,cls='',text)=>{
   const node=document.createElement(tag);
@@ -53,8 +54,8 @@ export function createRealDeckEditorUI({getDeck,getCatalog,getAnalysis,getSelect
   }
   function update(id,value){
     const deck=getDeck();if(!deck)return;
-    const n=Number(value);
-    if(!Number.isInteger(n)||n<0||n>3){status.textContent='매수는 0~3장의 정수만 입력하세요.';render();return;}
+    const n=parseRealCopyCount(value);
+    if(n===null){status.textContent='매수는 빈칸이 아닌 0~3장의 정수만 입력하세요.';render();return;}
     const next={...getOverrides(),[id]:n};
     persist(next);render();
   }
@@ -87,7 +88,10 @@ export function createRealDeckEditorUI({getDeck,getCatalog,getAnalysis,getSelect
     catalog.replaceChildren();
     const d=getDeck();if(!d)return;
     const all=eligibleCatalog(getCatalog());
+    const conflicts=conflictingCdbIds(getCatalog());
     const q=search.value.trim().toLocaleLowerCase('ko');
+    if(conflicts.size)catalog.append(el('p','deck-real-tip',
+      '동일 ID의 카드 정의가 충돌하는 CDB 카드 '+conflicts.size+'종은 검색에서 제외했습니다. 중복 CDB를 정리해 주세요.'));
     if(!all.length){catalog.append(el('p','deck-real-placeholder',
       '등록된 CDB에서 메인 덱에 넣을 수 있는 카드가 없습니다. 보관함에 CDB를 추가하세요.'));return;}
     if(!q){catalog.append(el('p','deck-real-placeholder',
@@ -200,7 +204,7 @@ export function createRealDeckEditorUI({getDeck,getCatalog,getAnalysis,getSelect
   report.addEventListener('click',()=>{
     const d=getDeck(),result=compare();
     if(!d||!result)return;
-    download('덱연구소_'+filename(d.name)+'_실제카드증감_비교_V0.8.3.md',
+    download('덱연구소_'+filename(d.name)+'_실제카드증감_비교_V0.8.3.1.md',
       realDeckReportMarkdown(result,options()),'text/markdown;charset=utf-8');
   });
   exportYdk.addEventListener('click',()=>{
@@ -208,7 +212,7 @@ export function createRealDeckEditorUI({getDeck,getCatalog,getAnalysis,getSelect
     if(!d||!result?.valid)return;
     try{
       const ydktxt=serializeEditedYdk(result);
-      download('덱연구소_'+filename(d.name)+'_실제수정안_V0.8.3.ydk',ydktxt,'text/plain;charset=utf-8');
+      download('덱연구소_'+filename(d.name)+'_실제수정안_V0.8.3.1.ydk',ydktxt,'text/plain;charset=utf-8');
       status.textContent='수정한 별도 YDK를 내려받았습니다. 원본은 그대로 있습니다.';
     }catch(error){status.textContent='YDK 내보내기 실패: '+error.message;}
   });

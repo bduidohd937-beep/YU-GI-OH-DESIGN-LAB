@@ -190,3 +190,71 @@ test('신규 UI는 실제 증감 패널과 YDK 다운로드, CDB 카드 검색 �
   assert.doesNotMatch(ui,/innerHTML|eval\s*\(|XMLHttpRequest|fetch\s*\(/);
   assert.equal(REAL_EDITOR_KEY,'design-lab:real-deck-edits:v1');
 });
+
+test('V0.8.3.1: 실제 덱 래퍼의 parsed.zones.main에서 사용자 초동·연장·부담 분류를 읽는다',async()=>{
+  const {selectionFromImportedDeck}=await import('../src/deck-selection.js');
+  const wrapped={key:'test',name:'덱.ydk',parsed:original};
+  const result=selectionFromImportedDeck(wrapped,{
+    starterIds:[starter,starter,'999999999'],
+    extenderIds:[extender],
+    riskIds:[risk,'123456789']
+  });
+  assert.deepEqual(result,{starterIds:[starter],extenderIds:[extender],riskIds:[risk]});
+  assert.deepEqual(selectionFromImportedDeck(null,{}),{
+    starterIds:[],extenderIds:[],riskIds:[]
+  });
+  const ui=readFileSync(new URL('../src/deck-lab-ui.js',import.meta.url),'utf8');
+  assert.match(ui,/selectionFromImportedDeck\(deck,tags\[deck\?\.key\]\|\|\{\}\)/);
+});
+test('V0.8.3.1: 4,000종 이후와 20,000행 이후 CDB 카드도 검색 후보에서 사라지지 않는다',()=>{
+  const large=Array.from({length:20010},(_,i)=>({
+    id:String(995000000+i),name:'시험 카드 '+i,type:0x2,origin:'대형.cdb'
+  }));
+  const catalog=eligibleCatalog(large);
+  assert.equal(catalog.length,20010);
+  assert.equal(catalog[4000].id,large[4000].id);
+  assert.equal(catalog[20009].id,large[20009].id);
+  assert.equal(eligibleCatalog(large,35).length,35);
+});
+test('V0.8.3.1: 빈 매수 입력·불리언·공백을 0장 삭제로 해석하지 않는다',async()=>{
+  const {parseRealCopyCount}=await import('../src/deck-real-editor.js');
+  for(const invalid of ['', '   ',false,true,null,undefined,'0.0','04','-1','4']){
+    assert.equal(parseRealCopyCount(invalid),null,String(invalid));
+  }
+  assert.equal(parseRealCopyCount('0'),0);
+  assert.equal(parseRealCopyCount(3),3);
+  const clean=cleanRealOverrides(original,cdb,{[starter]:'',[extender]:'  ',[newId]:'2'});
+  assert.equal(clean[starter],undefined);
+  assert.equal(clean[extender],undefined);
+  assert.equal(clean[newId],2);
+  const ui=readFileSync(new URL('../src/deck-real-editor-ui.js',import.meta.url),'utf8');
+  assert.match(ui,/const n=parseRealCopyCount\(value\)/);
+});
+test('V0.8.3.1: CDB 동일 ID의 다른 정의는 후보 제외, 해당 카드 사용 시 내보내기 차단',async()=>{
+  const {conflictingCdbIds}=await import('../src/deck-real-editor.js');
+  const conflicting=[...cdb,{id:newId,name:'다른 카드',type:0x2,desc:'바뀐 효과',origin:'겹친.cdb'}];
+  assert.ok(conflictingCdbIds(conflicting).has(newId));
+  assert.ok(!eligibleCatalog(conflicting).some(c=>c.id===newId));
+  assert.equal(buildRealDeck(original,conflicting,{}).valid,true);
+  const occupied=[...cdb,{id:starter,name:'동일 ID 다른 타입',type:0x4000021,origin:'충돌.cdb'}];
+  const built=buildRealDeck(original,occupied,{});
+  assert.equal(built.valid,false);
+  assert.match(built.errors.join(' '),/CDB 카드 정의.*충돌/);
+  assert.throws(()=>serializeEditedYdk(built),/생성할 수 없습니다/);
+});
+test('V0.8.3.1: 동일 내용 CDB 복수 등록은 중복 ID 충돌로 보지 않는다',async()=>{
+  const {conflictingCdbIds}=await import('../src/deck-real-editor.js');
+  const copied=[...cdb,{...cdb[0],origin:'복사본.cdb'}];
+  assert.equal(conflictingCdbIds(copied).size,0);
+  assert.equal(buildRealDeck(original,copied,{}).valid,true);
+});
+test('V0.8.3.1: 동일 ID가 서로 떨어져 있어도 무수정 YDK 순서를 정확히 보존한다',()=>{
+  const arranged=[starter,fillers[0],starter,extender,risk,starter,extender,
+    ...fillers.slice(1),risk,risk];
+  assert.equal(arranged.length,40);
+  const deck=parseYdk('#main\n'+arranged.join('\n')+'\n#extra\n'+extraId+'\n!side\n');
+  const result=buildRealDeck(deck,cdb,{});
+  assert.equal(result.valid,true);
+  assert.deepEqual(result.deck.zones.main,arranged);
+  assert.deepEqual(parseYdk(serializeEditedYdk(result)).zones.main,arranged);
+});

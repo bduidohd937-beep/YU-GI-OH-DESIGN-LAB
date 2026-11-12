@@ -6,6 +6,7 @@ import {createDeckScenarioUI} from './deck-scenarios-ui.js';
 import {scenarioReportMarkdown} from './deck-scenarios.js';
 import {createRealDeckEditorUI} from './deck-real-editor-ui.js';
 import {realDeckReportMarkdown} from './deck-real-editor.js';
+import {selectionFromImportedDeck} from './deck-selection.js';
 
 const $=id=>document.getElementById(id);
 const make=(tag,cls='',text)=>{
@@ -56,13 +57,7 @@ function current(){
   return found||decks[0]||null;
 }
 function selection(deck){
-  const record=tags[deck.key]||{};
-  const present=new Set(deck.zones.main);
-  return {
-    starterIds:(Array.isArray(record.starterIds)?record.starterIds:[]).filter(id=>present.has(id)),
-    extenderIds:(Array.isArray(record.extenderIds)?record.extenderIds:[]).filter(id=>present.has(id)),
-    riskIds:(Array.isArray(record.riskIds)?record.riskIds:[]).filter(id=>present.has(id))
-  };
+  return selectionFromImportedDeck(deck,tags[deck?.key]||{});
 }
 function setTag(deck,id,type,checked){
   if(!tags[deck.key])tags[deck.key]={starterIds:[],extenderIds:[]};
@@ -285,7 +280,7 @@ $('deck-export').addEventListener('click',()=>{
   const blob=new Blob([txt],{type:'text/markdown;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const link=make('a');link.href=url;
-  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.3.md';
+  link.download='덱연구소_'+safeFileName(deck.name.replace(/\.ydk$/i,''))+'_분석_V0.8.3.1.md';
   document.body.append(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2500);
 });
