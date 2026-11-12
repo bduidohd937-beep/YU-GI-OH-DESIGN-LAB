@@ -61,6 +61,9 @@ async function readImports(fileList) {
           }
           texts.push({ name: entry.name.split('/').pop(), text });
         }
+      } else if (/\.(?:cdb|lua|ydk)$/i.test(file.name)) {
+        // 이 파일은 교차 검수 또는 덱 연구소에서 처리합니다. 원문 자료실에서는 중복 경고하지 않습니다.
+        continue;
       } else {
         warnings.push('지원하지 않는 파일: ' + file.name);
       }
